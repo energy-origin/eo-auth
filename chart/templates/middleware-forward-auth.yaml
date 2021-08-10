@@ -1,0 +1,9 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: ett-auth-service
+  labels:
+    {{- include "ett-auth.labels" . | nindent 4 }}
+spec:
+  forwardAuth:
+    address: http://{{ include "ett-auth.fullname" . }}

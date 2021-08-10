@@ -1,0 +1,13 @@
+
+deployments:
+  - name: auth-service
+    replicaCount: 1
+    image:
+      repository: projectorigin/auth-service
+      tag: "latest"
+      pullPolicy: IfNotPresent
+
+service:
+  deployment: auth-service
+  type: ClusterIP
+  port: 80
