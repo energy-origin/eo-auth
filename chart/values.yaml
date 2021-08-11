@@ -11,3 +11,8 @@ service:
   deployment: auth-service
   type: ClusterIP
   port: 80
+
+ingress:
+  host: localhost
+  path: /auth
+  servicePort: 80

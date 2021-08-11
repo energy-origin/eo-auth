@@ -6,4 +6,4 @@ metadata:
     {{- include "ett-auth.labels" . | nindent 4 }}
 spec:
   forwardAuth:
-    address: http://{{ include "ett-auth.fullname" . }}
+    address: http://{{ include "ett-auth.fullname" . }}/auth
