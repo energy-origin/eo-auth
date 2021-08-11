@@ -5,7 +5,7 @@ deployments:
     image:
       repository: projectorigin/auth-service
       tag: "latest"
-      pullPolicy: IfNotPresent
+      pullPolicy: Always
 
 service:
   deployment: auth-service
