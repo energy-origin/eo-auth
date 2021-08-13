@@ -5,9 +5,14 @@ deployments:
     image:
       repository: projectorigin/auth-service
       tag: "latest"
-      pullPolicy: IfNotPresent
+      pullPolicy: Always
 
 service:
   deployment: auth-service
   type: ClusterIP
   port: 80
+
+ingress:
+  host: localhost
+  path: /auth
+  servicePort: 80
