@@ -3,7 +3,7 @@ deployments:
   - name: auth-service
     replicaCount: 1
     image:
-      repository: projectorigin/auth-service
+      repository: projectorigin/ett-auth
       tag: "latest"
       pullPolicy: Always
 
