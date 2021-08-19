@@ -1,0 +1,27 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+pytest-order = "*"
+pytest-depends = "*"
+pytest-asyncio = "*"
+waitress = "*"
+
+[packages]
+pyjwt = "*"
+authlib = "*"
+requests = "*"
+peterplys = "*"
+
+[scripts]
+update-platform = "pip install --upgrade ./../ett-platform-utils"
+
+[requires]
+python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
