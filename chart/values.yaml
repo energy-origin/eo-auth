@@ -2,6 +2,12 @@
 deployments:
   - name: auth-service
     replicaCount: 1
+    command: "/bin/bash"
+    args: "entrypoint_api.sh"
+    probes: true
+    env:
+      EVENT_BUS_HOST: my-cluster-kafka-plain-bootstrap.ett-kafka.svc.cluster.local
+      EVENT_BUS_PORT: 9092
     image:
       repository: projectorigin/ett-auth
       tag: "latest"
