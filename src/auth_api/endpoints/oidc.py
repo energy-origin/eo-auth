@@ -1,25 +1,33 @@
-import jwt
 from typing import Optional
-from urllib.parse import urlencode
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from energytt_platform.auth import OpaqueToken
-from energytt_platform.serialize import json_serializer
-from energytt_platform.api import Endpoint, Unauthorized
+from energytt_platform.api import Endpoint
+from energytt_platform.tokens import TokenEncoder
+from energytt_platform.serialize import Serializable
+from energytt_platform.bus import topics as t, messages as m
+from energytt_platform.auth import OpaqueToken, encode_opaque_token
 
-from auth_api.token import (
-    CallbackToken,
-    encode_auth_token,
-    decode_auth_token,
+from auth_api.bus import broker
+from auth_api.backend import auth_backend
+from auth_api.config import SYSTEM_SECRET
+
+
+# -- State -------------------------------------------------------------------
+
+
+@dataclass
+class AuthState(Serializable):
+    redirect_uri: str
+
+
+auth_state_encoder = TokenEncoder(
+    cls_=AuthState,
+    secret=SYSTEM_SECRET,
 )
 
-from auth_api.config import (
-    OIDC_CLIENT_ID,
-    OIDC_PROVIDER_URL,
-    OIDC_LOGIN_REDIRECT_ENDPOINT,
-    SYSTEM_SECRET,
-)
+
+# -- Endpoints ---------------------------------------------------------------
 
 
 class OpenIdAuthenticate(Endpoint):
@@ -47,40 +55,18 @@ class OpenIdAuthenticate(Endpoint):
         # &redirect_uri=<redirect_uri>&scope=openid mitid
         # ssn&state=<state>&nonce=<nonce>&idp_values=mitid
 
-        callback_token = self.create_callback_token(
+        state = AuthState(
             redirect_uri=request.redirect_uri,
         )
 
-        callback_url = '%s?%s' % (
-            OIDC_LOGIN_REDIRECT_ENDPOINT,
-            callback_token,
-        )
-
-        query = {
-            'client_id': OIDC_CLIENT_ID,
-            'response_type': 'code',
-            'redirect_uri': callback_url,
-            'scope': ' '.join(('openid', 'mitid', 'ssn')),
-            'state': '',
-            'nonce': '',
-            'idp_values': 'mitid',
-        }
-
-        redirect_uri = '%s?%s' % (
-            OIDC_PROVIDER_URL,
-            urlencode(query),
+        url, state = auth_backend.create_authorization_url(
+            state=auth_state_encoder.encode(state),
         )
 
         return self.Response(
             success=True,
-            url=redirect_uri,
+            url=url,
         )
-
-    def create_callback_token(self, **kwargs) -> str:
-        """
-        Creates an encoded AuthToken.
-        """
-        return encode_auth_token(CallbackToken(**kwargs))
 
 
 class OpenIdAuthenticateCallback(Endpoint):
@@ -91,9 +77,8 @@ class OpenIdAuthenticateCallback(Endpoint):
 
     @dataclass
     class Request:
-        token: str
-        scope: Optional[str] = field(default=None)
         code: Optional[str] = field(default=None)
+        scope: Optional[str] = field(default=None)
         state: Optional[str] = field(default=None)
         error: Optional[str] = field(default=None)
         error_hint: Optional[str] = field(default=None)
@@ -102,51 +87,64 @@ class OpenIdAuthenticateCallback(Endpoint):
     @dataclass
     class Response:
         success: bool
+        url: str
         token: Optional[str] = field(default=None)
 
     def handle_request(self, request: Request) -> Response:
         """
         Handle HTTP request.
         """
-
-        callback_token = self.parse_callback_token(request.token)
-
         # TODO Read query parameter "code"
         # TODO Request ID- and Access token from Identity Provide
         # TODO Get subject etc. from ID token
 
-        subject = ''
+        try:
+            state_decoded = auth_state_encoder.decode(request.state)
+        except auth_state_encoder.DecodeError:
+            # TODO Handle...
+            raise
+
+        token = auth_backend.fetch_token(
+            code=request.code,
+            state=request.state,
+        )
+
+        # id_token:
+        # iss - Issuer
+        # sub - Subject
+        # aud - Audience
+        # exp - Expiration
+        # nbf - Not Before
+        # iat - Issued At
+        # jti - JWT ID
+        id_token = auth_backend.get_id_token(
+            token=token,
+        )
+
+        subject = id_token['sub']
+
+        opaque_token = OpaqueToken(
+            issued=datetime.now(),
+            expires=datetime.now() + timedelta(days=30),
+            subject=subject,
+            scope=request.scope.split(' '),
+            on_behalf_of=subject,
+        )
+
+        encoded_opaque_token = encode_opaque_token(
+            token=opaque_token,
+        )
+
+        broker.publish(
+            topic=t.AUTH,
+            msg=m.UserOnboarded(
+                subject=subject,
+                name=f'User {subject}',
+            ),
+        )
 
         return self.Response(
             success=True,
-            token=self.create_opaque_token(subject),
-        )
-
-    def parse_callback_token(self, encoded_jwt: str) -> CallbackToken:
-        """
-        Parses AuthToken
-        """
-        return decode_auth_token(encoded_jwt)
-
-    def get_tokens(self):
-        """
-        Fetches ID- and Access token from Identity Provider.
-        """
-        pass
-
-    def create_opaque_token(self, subject: str) -> str:
-        """
-        TODO
-        """
-        token = OpaqueToken(
-            subject=subject,
-            on_behalf_of=subject,
-            issued=datetime.now(),
-            expires=datetime.now() + timedelta(days=30),
-        )
-
-        return jwt.encode(
-            payload=json_serializer.serialize(token),
-            key=SYSTEM_SECRET,
-            algorithm='HS256',
+            url=state_decoded.redirect_uri,
+            token=encoded_opaque_token,
         )
