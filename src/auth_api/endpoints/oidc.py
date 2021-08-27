@@ -1,16 +1,20 @@
-from typing import Optional
+from uuid import uuid4
+from typing import Optional, List
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 
 from energytt_platform.api import Endpoint
 from energytt_platform.tokens import TokenEncoder
 from energytt_platform.serialize import Serializable
+from energytt_platform.models.auth import InternalToken
 from energytt_platform.bus import topics as t, messages as m
-from energytt_platform.auth import OpaqueToken, encode_opaque_token
 
-from auth_api.bus import broker
-from auth_api.backend import auth_backend
-from auth_api.config import SYSTEM_SECRET
+from ..db import db
+from ..bus import broker
+from ..backend import oidc
+from ..models import DbToken
+from ..config import TOKEN_SECRET
+from ..controller import controller
 
 
 # -- State -------------------------------------------------------------------
@@ -18,12 +22,30 @@ from auth_api.config import SYSTEM_SECRET
 
 @dataclass
 class AuthState(Serializable):
+    """
+    AuthState is an intermediate token generated when the user requests
+    an authorization URL. It encodes to a [JWT] string.
+
+    The token is included in the authorization URL, and is returned by the
+    OIDC Identity Provider when the client is redirected back.
+
+    It provides a way to keep this service stateless.
+    """
+    created: datetime
     redirect_uri: str
 
 
-auth_state_encoder = TokenEncoder(
-    cls_=AuthState,
-    secret=SYSTEM_SECRET,
+# -- Encoders ----------------------------------------------------------------
+
+
+state_encoder = TokenEncoder(
+    schema=AuthState,
+    secret=TOKEN_SECRET,
+)
+
+token_encoder = TokenEncoder(
+    schema=InternalToken,
+    secret=TOKEN_SECRET,
 )
 
 
@@ -32,7 +54,7 @@ auth_state_encoder = TokenEncoder(
 
 class OpenIdAuthenticate(Endpoint):
     """
-    Redirects client to Identity Provider.
+    TODO
     """
 
     @dataclass
@@ -48,19 +70,17 @@ class OpenIdAuthenticate(Endpoint):
         """
         Handle HTTP request.
         """
-        # TODO Redirect client to identity provider
-        # TODO Provide parameters: client_id, response_type, redirect_uri, scope, state, ???
-        # TODO Example URL:
-        # https://netsbroker.mitid.dk/op/connect/authorize?client_id=<client_id>&response_type=code
-        # &redirect_uri=<redirect_uri>&scope=openid mitid
-        # ssn&state=<state>&nonce=<nonce>&idp_values=mitid
-
         state = AuthState(
+            created=datetime.now(tz=timezone.utc),
             redirect_uri=request.redirect_uri,
         )
 
-        url, state = auth_backend.create_authorization_url(
-            state=auth_state_encoder.encode(state),
+        state_encoded = state_encoder.encode(
+            obj=state,
+        )
+
+        url, _ = oidc.create_authorization_url(
+            state=state_encoded,
         )
 
         return self.Response(
@@ -90,61 +110,118 @@ class OpenIdAuthenticateCallback(Endpoint):
         url: str
         token: Optional[str] = field(default=None)
 
-    def handle_request(self, request: Request) -> Response:
+    @db.atomic()
+    def handle_request(
+            self,
+            request: Request,
+            session: db.Session,
+    ) -> Response:
         """
-        Handle HTTP request.
+        Handle request.
+
+        TODO Handle errors from Identity Provider...
+
+        :param request:
+        :param session:
+        :return:
         """
-        # TODO Read query parameter "code"
-        # TODO Request ID- and Access token from Identity Provide
-        # TODO Get subject etc. from ID token
 
         try:
-            state_decoded = auth_state_encoder.decode(request.state)
-        except auth_state_encoder.DecodeError:
+            state_decoded = state_encoder.decode(request.state)
+        except state_encoder.DecodeError:
             # TODO Handle...
             raise
 
-        token = auth_backend.fetch_token(
-            code=request.code,
-            state=request.state,
-        )
+        # -- OIDC ------------------------------------------------------------
 
         # id_token:
-        # iss - Issuer
-        # sub - Subject
-        # aud - Audience
-        # exp - Expiration
-        # nbf - Not Before
-        # iat - Issued At
-        # jti - JWT ID
-        id_token = auth_backend.get_id_token(
-            token=token,
-        )
+        #     iss - Issuer
+        #     sub - Subject
+        #     aud - Audience
+        #     exp - Expiration
+        #     nbf - Not Before
+        #     iat - Issued At
+        #     jti - JWT ID
 
+        # Fetch token(s)
+        token = oidc.fetch_token(code=request.code, state=request.state)
+        id_token = oidc.get_id_token(token=token)
+
+        # Token properties
         subject = id_token['sub']
+        scope = request.scope.split(' ')
+        issued = datetime.now(tz=timezone.utc)
+        expires = datetime \
+            .fromtimestamp(token['expires_at']) \
+            .replace(tzinfo=timezone.utc)
 
-        opaque_token = OpaqueToken(
-            issued=datetime.now(),
-            expires=datetime.now() + timedelta(days=30),
+        # -- User ------------------------------------------------------------
+
+        # Get user from database
+        user = controller.get_or_create_user(
+            session=session,
             subject=subject,
-            scope=request.scope.split(' '),
-            on_behalf_of=subject,
         )
 
-        encoded_opaque_token = encode_opaque_token(
-            token=opaque_token,
+        # New user - first time logging in?
+        if not user.has_logged_in:
+            broker.publish(
+                topic=t.AUTH,
+                msg=m.UserOnboarded(subject=subject),
+            )
+
+        # Update user last login timestamp
+        user.update_last_login()
+
+        # -- Token -----------------------------------------------------------
+
+        opaque_token = self.create_token(
+            session=session,
+            subject=subject,
+            scope=scope,
+            issued=issued,
+            expires=expires,
         )
 
-        broker.publish(
-            topic=t.AUTH,
-            msg=m.UserOnboarded(
-                subject=subject,
-                name=f'User {subject}',
-            ),
-        )
+        # -- Response --------------------------------------------------------
 
         return self.Response(
             success=True,
             url=state_decoded.redirect_uri,
-            token=encoded_opaque_token,
+            token=opaque_token,
         )
+
+    def create_token(
+            self,
+            session: db.Session,
+            issued: datetime,
+            expires: datetime,
+            subject: str,
+            scope: List[str],
+    ) -> str:
+        """
+        TODO
+        """
+        internal_token = InternalToken(
+            issued=issued,
+            expires=expires,
+            subject=subject,
+            scope=scope,
+        )
+
+        internal_token_encoded = token_encoder.encode(
+            obj=internal_token,
+        )
+
+        # opaque_token = str(uuid4())
+        opaque_token = internal_token_encoded
+
+        session.add(DbToken(
+            subject=subject,
+            opaque_token=opaque_token,
+            internal_token=internal_token_encoded,
+            issued=issued,
+            expires=expires,
+        ))
+
+        return opaque_token

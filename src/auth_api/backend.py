@@ -4,7 +4,7 @@ from typing import Optional
 from authlib.jose import jwt
 from authlib.integrations.requests_client import OAuth2Session
 
-from auth_api.config import (
+from .config import (
     OIDC_CLIENT_ID,
     OIDC_CLIENT_SECRET,
     OIDC_WANTED_SCOPES,
@@ -14,10 +14,11 @@ from auth_api.config import (
     OIDC_LOGIN_REDIRECT_URL,
 )
 
+
 DEBUG = True
 
 
-class AuthBackend(object):
+class OidcBackend(object):
     """
     TODO
     """
@@ -132,4 +133,4 @@ class AuthBackend(object):
 # -- Singletons --------------------------------------------------------------
 
 
-auth_backend = AuthBackend()
+oidc = OidcBackend()
