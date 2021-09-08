@@ -54,6 +54,36 @@ class DbToken(db.ModelBase):
     user = relationship('DbUser', foreign_keys=[subject])
 
 
+class DbMeteringPointOwner(db.ModelBase):
+    """
+    TODO
+    """
+    __tablename__ = 'meteringpoint_owner'
+    __table_args__ = (
+        sa.PrimaryKeyConstraint('gsrn'),
+        # sa.CheckConstraint('end IS NULL OR begin < end'),
+    )
+
+    subject = sa.Column(sa.ForeignKey('users.subject'), index=True, nullable=False)
+    gsrn = sa.Column(sa.String(), index=True, nullable=False)
+    begin = sa.Column(sa.DateTime(timezone=True), index=True, nullable=False)
+    end = sa.Column(sa.DateTime(timezone=True), index=True)
+
+    user = relationship('DbUser', foreign_keys=[subject])
+
+    def set_begins_now(self):
+        """
+        TODO
+        """
+        self.begin = sa.func.now()
+
+    def set_ends_now(self):
+        """
+        TODO
+        """
+        self.end = sa.func.now()
+
+
 class DbMeteringPointDelegate(db.ModelBase):
     """
     TODO

@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from .db import db
-from .models import DbUser, DbToken, DbMeteringPointDelegate
-from .queries import UserQuery, TokenQuery, MeteringPointDelegateQuery
+from auth_shared.db import db
+from auth_shared.models import DbUser, DbMeteringPointDelegate
+from auth_shared.queries import UserQuery, MeteringPointDelegateQuery
 
 
 class DatabaseController(object):

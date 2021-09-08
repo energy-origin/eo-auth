@@ -4,7 +4,7 @@ from typing import Optional
 from authlib.jose import jwt
 from authlib.integrations.requests_client import OAuth2Session
 
-from .config import (
+from auth_shared.config import (
     OIDC_CLIENT_ID,
     OIDC_CLIENT_SECRET,
     OIDC_WANTED_SCOPES,

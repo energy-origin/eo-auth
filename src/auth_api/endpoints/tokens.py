@@ -1,7 +1,7 @@
 from energytt_platform.api import Endpoint, Context, Unauthorized
 
-from ..db import db
-from ..queries import TokenQuery
+from auth_shared.db import db
+from auth_shared.queries import TokenQuery
 
 
 class ForwardAuth(Endpoint):

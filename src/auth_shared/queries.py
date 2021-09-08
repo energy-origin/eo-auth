@@ -2,7 +2,12 @@ from sqlalchemy import orm
 
 from energytt_platform.sql import SqlQuery
 
-from .models import DbUser, DbToken, DbMeteringPointDelegate
+from .models import (
+    DbUser,
+    DbToken,
+    DbMeteringPointOwner,
+    DbMeteringPointDelegate,
+)
 
 
 class UserQuery(SqlQuery):
@@ -37,6 +42,35 @@ class TokenQuery(SqlQuery):
         TODO
         """
         return self.filter(DbToken.opaque_token == opaque_token)
+
+
+class MeteringPointOwnerQuery(SqlQuery):
+    """
+    Query DbMeteringPointOwner.
+    """
+    def _get_base_query(self) -> orm.Query:
+        """
+        TODO
+        """
+        return self.session.query(DbMeteringPointOwner)
+
+    def has_subject(self, subject: str) -> 'MeteringPointOwnerQuery':
+        """
+        TODO
+        """
+        return self.filter(DbMeteringPointOwner.subject == subject)
+
+    def has_gsrn(self, gsrn: str) -> 'MeteringPointOwnerQuery':
+        """
+        TODO
+        """
+        return self.filter(DbMeteringPointOwner.gsrn == gsrn)
+
+    def is_current_owner(self) -> 'MeteringPointOwnerQuery':
+        """
+        TODO
+        """
+        return self
 
 
 class MeteringPointDelegateQuery(SqlQuery):

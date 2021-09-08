@@ -1,6 +1,6 @@
 from energytt_platform.api import Application
 
-from .config import TOKEN_SECRET
+from auth_shared.config import TOKEN_SECRET
 from .endpoints import (
     ForwardAuth,
     OpenIdAuthenticate,

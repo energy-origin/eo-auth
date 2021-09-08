@@ -1,4 +1,3 @@
-from uuid import uuid4
 from typing import Optional, List
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
@@ -9,11 +8,11 @@ from energytt_platform.serialize import Serializable
 from energytt_platform.models.auth import InternalToken
 from energytt_platform.bus import topics as t, messages as m
 
-from ..db import db
-from ..bus import broker
+from auth_shared.db import db
+from auth_shared.bus import broker
 from ..backend import oidc
-from ..models import DbToken
-from ..config import TOKEN_SECRET
+from auth_shared.models import DbToken
+from auth_shared.config import TOKEN_SECRET
 from ..controller import controller
 
 
@@ -142,6 +141,8 @@ class OpenIdAuthenticateCallback(Endpoint):
         #     nbf - Not Before
         #     iat - Issued At
         #     jti - JWT ID
+        # neb_sid '<uuid4>'
+        # identity_type 'private'
 
         # Fetch token(s)
         token = oidc.fetch_token(code=request.code, state=request.state)
@@ -164,11 +165,11 @@ class OpenIdAuthenticateCallback(Endpoint):
         )
 
         # New user - first time logging in?
-        if not user.has_logged_in:
-            broker.publish(
-                topic=t.AUTH,
-                msg=m.UserOnboarded(subject=subject),
-            )
+        # if not user.has_logged_in:
+        #     broker.publish(
+        #         topic=t.AUTH,
+        #         msg=m.UserOnboarded(subject=subject),
+        #     )
 
         # Update user last login timestamp
         user.update_last_login()
@@ -205,8 +206,12 @@ class OpenIdAuthenticateCallback(Endpoint):
         internal_token = InternalToken(
             issued=issued,
             expires=expires,
+            actor=subject,
             subject=subject,
-            scope=scope,
+            scope=[
+                'meteringpoints.read',
+                'measurements.read',
+            ],
         )
 
         internal_token_encoded = token_encoder.encode(

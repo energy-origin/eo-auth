@@ -4,10 +4,9 @@ from energytt_platform.api import Endpoint, Context
 from energytt_platform.bus import messages as m, topics as t
 from energytt_platform.models.auth import MeteringPointDelegate
 
-from ..db import db
-from ..bus import broker
+from auth_shared.db import db
+from auth_shared.bus import broker
 from ..controller import controller
-from ..queries import MeteringPointDelegateQuery
 
 
 class GrantMeteringPointDelegate(Endpoint):
