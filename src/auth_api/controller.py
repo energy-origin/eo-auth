@@ -2,13 +2,40 @@ from datetime import datetime
 
 from auth_shared.db import db
 from auth_shared.models import DbUser, DbMeteringPointDelegate
-from auth_shared.queries import UserQuery, MeteringPointDelegateQuery
+from auth_shared.queries import (
+    UserQuery,
+    MeteringPointOwnerQuery,
+    MeteringPointDelegateQuery,
+)
 
 
 class DatabaseController(object):
     """
     Controls business logic for SQL database.
     """
+
+    def is_current_owner(
+            self,
+            session: db.Session,
+            subject: str,
+            gsrn: str,
+    ) -> bool:
+        """
+        Check if subject is the current owner of a MeteringPoint.
+
+        :param session:
+        :param subject:
+        :param gsrn:
+        :return:
+        """
+        query = MeteringPointOwnerQuery(session) \
+            .has_subject(subject) \
+            .has_gsrn(gsrn) \
+            .is_current_owner()
+
+        # Checking the exact result count enforces that maximum
+        # one owner can exists for a given MeteringPoint
+        return query.count() == 1
 
     def get_or_create_user(
             self,
@@ -82,6 +109,8 @@ class DatabaseController(object):
             .has_subject(subject) \
             .has_gsrn(gsrn) \
             .delete()
+
+    # def is_owner
 
 
 # -- Singletons --------------------------------------------------------------

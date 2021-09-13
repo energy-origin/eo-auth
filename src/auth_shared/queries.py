@@ -1,4 +1,4 @@
-from sqlalchemy import orm
+from sqlalchemy import orm, func, and_, or_
 
 from energytt_platform.sql import SqlQuery
 
@@ -70,7 +70,15 @@ class MeteringPointOwnerQuery(SqlQuery):
         """
         TODO
         """
-        return self
+        return self.filter(
+            and_(
+                DbMeteringPointOwner.begin <= func.now(),
+                or_(
+                    DbMeteringPointOwner.end > func.now(),
+                    DbMeteringPointOwner.end.is_(None),
+                ),
+            )
+        )
 
 
 class MeteringPointDelegateQuery(SqlQuery):

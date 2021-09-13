@@ -47,11 +47,12 @@ class DbToken(db.ModelBase):
 
     opaque_token = sa.Column(sa.String(), index=True, nullable=False)
     internal_token = sa.Column(sa.String(), nullable=False)
-    subject = sa.Column(sa.ForeignKey('users.subject'), index=True, nullable=False)
+    # subject = sa.Column(sa.ForeignKey('users.subject'), index=True, nullable=False)
+    subject = sa.Column(sa.String(), index=True, nullable=False)
     issued = sa.Column(sa.DateTime(timezone=True), nullable=False)
     expires = sa.Column(sa.DateTime(timezone=True), nullable=False)
 
-    user = relationship('DbUser', foreign_keys=[subject])
+    # user = relationship('DbUser', foreign_keys=[subject])
 
 
 class DbMeteringPointOwner(db.ModelBase):
@@ -60,16 +61,18 @@ class DbMeteringPointOwner(db.ModelBase):
     """
     __tablename__ = 'meteringpoint_owner'
     __table_args__ = (
-        sa.PrimaryKeyConstraint('gsrn'),
+        sa.PrimaryKeyConstraint('id'),
         # sa.CheckConstraint('end IS NULL OR begin < end'),
     )
 
-    subject = sa.Column(sa.ForeignKey('users.subject'), index=True, nullable=False)
+    id = sa.Column(sa.Integer(), index=True)
+    # subject = sa.Column(sa.ForeignKey('users.subject'), index=True, nullable=False)
+    subject = sa.Column(sa.String(), index=True, nullable=False)
     gsrn = sa.Column(sa.String(), index=True, nullable=False)
     begin = sa.Column(sa.DateTime(timezone=True), index=True, nullable=False)
     end = sa.Column(sa.DateTime(timezone=True), index=True)
 
-    user = relationship('DbUser', foreign_keys=[subject])
+    # user = relationship('DbUser', foreign_keys=[subject])
 
     def set_begins_now(self):
         """
@@ -94,7 +97,8 @@ class DbMeteringPointDelegate(db.ModelBase):
         sa.UniqueConstraint('gsrn', 'subject'),
     )
 
-    subject = sa.Column(sa.ForeignKey('users.subject'), index=True, nullable=False)
+    # subject = sa.Column(sa.ForeignKey('users.subject'), index=True, nullable=False)
+    subject = sa.Column(sa.String(), index=True, nullable=False)
     gsrn = sa.Column(sa.String(), index=True, nullable=False)
 
-    user = relationship('DbUser', foreign_keys=[subject])
+    # user = relationship('DbUser', foreign_keys=[subject])

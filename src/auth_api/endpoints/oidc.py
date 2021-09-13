@@ -9,7 +9,7 @@ from energytt_platform.models.auth import InternalToken
 from energytt_platform.bus import topics as t, messages as m
 
 from auth_shared.db import db
-from auth_shared.bus import broker
+# from auth_shared.bus import broker
 from ..backend import oidc
 from auth_shared.models import DbToken
 from auth_shared.config import TOKEN_SECRET
