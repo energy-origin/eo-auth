@@ -1,19 +1,25 @@
-from typing import Optional, List
+from uuid import uuid4
+from typing import Optional, List, Any, Dict
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
-from energytt_platform.api import Endpoint
 from energytt_platform.tokens import TokenEncoder
 from energytt_platform.serialize import Serializable
 from energytt_platform.models.auth import InternalToken
-from energytt_platform.bus import topics as t, messages as m
+from energytt_platform.tools import append_query_parameters
+from energytt_platform.api import \
+    Endpoint, Cookie, BadRequest, TemporaryRedirect
 
-from auth_shared.db import db
-# from auth_shared.bus import broker
-from ..backend import oidc
-from auth_shared.models import DbToken
-from auth_shared.config import TOKEN_SECRET
-from ..controller import controller
+from auth_api.db import db
+from auth_api.models import DbToken, DbLoginRecord
+from auth_api.config import (
+    INTERNAL_TOKEN_SECRET,
+    TOKEN_COOKIE_NAME,
+    TOKEN_COOKIE_DOMAIN,
+    TOKEN_DEFAULT_SCOPES,
+)
+
+from ..oidc import oidc
 
 
 # -- State -------------------------------------------------------------------
@@ -39,21 +45,41 @@ class AuthState(Serializable):
 
 state_encoder = TokenEncoder(
     schema=AuthState,
-    secret=TOKEN_SECRET,
+    secret=INTERNAL_TOKEN_SECRET,
 )
 
-token_encoder = TokenEncoder(
+internal_token_encoder = TokenEncoder(
     schema=InternalToken,
-    secret=TOKEN_SECRET,
+    secret=INTERNAL_TOKEN_SECRET,
 )
 
 
-# -- Endpoints ---------------------------------------------------------------
+# -- Helpers -----------------------------------------------------------------
 
 
-class OpenIdAuthenticate(Endpoint):
+def build_auth_url(redirect_uri: str) -> str:
     """
     TODO
+    """
+    state = AuthState(
+        created=datetime.now(tz=timezone.utc),
+        redirect_uri=redirect_uri,
+    )
+
+    state_encoded = state_encoder.encode(obj=state)
+
+    url, _ = oidc.create_authorization_url(state=state_encoded)
+
+    return url
+
+
+# -- Login Endpoints ---------------------------------------------------------
+
+
+class OpenIdLogin(Endpoint):
+    """
+    Returns a login URL which initiates a login flow @ the
+    OpenID Connect Identity Provider.
     """
 
     @dataclass
@@ -62,43 +88,51 @@ class OpenIdAuthenticate(Endpoint):
 
     @dataclass
     class Response:
-        success: bool
         url: Optional[str] = field(default=None)
 
     def handle_request(self, request: Request) -> Response:
         """
         Handle HTTP request.
         """
-        state = AuthState(
-            created=datetime.now(tz=timezone.utc),
-            redirect_uri=request.redirect_uri,
-        )
-
-        state_encoded = state_encoder.encode(
-            obj=state,
-        )
-
-        url, _ = oidc.create_authorization_url(
-            state=state_encoded,
-        )
-
         return self.Response(
-            success=True,
-            url=url,
+            url=build_auth_url(request.redirect_uri),
         )
 
 
-class OpenIdAuthenticateCallback(Endpoint):
+class OpenIdLoginRedirect(Endpoint):
     """
-    Callback: Client is redirected to this endpoint from Identity Provider
-    after completing authentication flow.
+    Redirects client to login URL which initiates a login flow @ the
+    OpenID Connect Identity Provider.
     """
 
     @dataclass
     class Request:
+        redirect_uri: str
+
+    def handle_request(self, request: Request) -> TemporaryRedirect:
+        """
+        Handle HTTP request.
+        """
+        return TemporaryRedirect(
+            url=build_auth_url(request.redirect_uri),
+        )
+
+
+class OpenIdLoginCallback(Endpoint):
+    """
+    Callback: Client is redirected to this endpoint from Identity Provider
+    after completing authentication flow.
+
+    TODO Cookie: HttpOnly, Secure, SameSite
+    TODO Cookie SKAL have timeout
+    """
+
+    @dataclass
+    class Request:
+        state: str
+        iss: Optional[str] = field(default=None)
         code: Optional[str] = field(default=None)
         scope: Optional[str] = field(default=None)
-        state: Optional[str] = field(default=None)
         error: Optional[str] = field(default=None)
         error_hint: Optional[str] = field(default=None)
         error_description: Optional[str] = field(default=None)
@@ -114,85 +148,113 @@ class OpenIdAuthenticateCallback(Endpoint):
             self,
             request: Request,
             session: db.Session,
-    ) -> Response:
+    ) -> TemporaryRedirect:
         """
         Handle request.
 
         TODO Handle errors from Identity Provider...
-
-        :param request:
-        :param session:
-        :return:
         """
-
         try:
             state_decoded = state_encoder.decode(request.state)
         except state_encoder.DecodeError:
             # TODO Handle...
-            raise
+            raise BadRequest()
+
+        success = not any((
+            request.error,
+            request.error_hint,
+            request.error_description,
+        ))
+
+        if success:
+            return self._handle_successful_login(
+                request=request,
+                session=session,
+                state=state_decoded,
+            )
+        else:
+            return self._handle_failed_login(
+                state=state_decoded,
+            )
+
+    def _handle_successful_login(
+            self,
+            request: Request,
+            session: db.Session,
+            state: AuthState,
+    ) -> TemporaryRedirect:
+        """
+        TODO
+
+        :param request:
+        :param session:
+        :param state:
+        :return:
+        """
 
         # -- OIDC ------------------------------------------------------------
 
-        # id_token:
-        #     iss - Issuer
-        #     sub - Subject
-        #     aud - Audience
-        #     exp - Expiration
-        #     nbf - Not Before
-        #     iat - Issued At
-        #     jti - JWT ID
-        # neb_sid '<uuid4>'
-        # identity_type 'private'
+        # TODO Handle if this fails:
 
-        # Fetch token(s)
-        token = oidc.fetch_token(code=request.code, state=request.state)
-        id_token = oidc.get_id_token(token=token)
-
-        # Token properties
-        subject = id_token['sub']
-        scope = request.scope.split(' ')
-        issued = datetime.now(tz=timezone.utc)
-        expires = datetime \
-            .fromtimestamp(token['expires_at']) \
-            .replace(tzinfo=timezone.utc)
+        oidc_token = oidc.fetch_token(
+            code=request.code,
+            state=request.state,
+        )
 
         # -- User ------------------------------------------------------------
 
-        # Get user from database
-        user = controller.get_or_create_user(
+        self._register_user_login(
             session=session,
-            subject=subject,
+            subject=oidc_token.id_token.subject,
         )
-
-        # New user - first time logging in?
-        # if not user.has_logged_in:
-        #     broker.publish(
-        #         topic=t.AUTH,
-        #         msg=m.UserOnboarded(subject=subject),
-        #     )
-
-        # Update user last login timestamp
-        user.update_last_login()
 
         # -- Token -----------------------------------------------------------
 
-        opaque_token = self.create_token(
+        opaque_token = self._create_token(
             session=session,
-            subject=subject,
-            scope=scope,
-            issued=issued,
-            expires=expires,
+            issued=oidc_token.id_token.issued,
+            expires=oidc_token.id_token.expires,
+            subject=oidc_token.id_token.sub,
+            scope=TOKEN_DEFAULT_SCOPES,
         )
 
         # -- Response --------------------------------------------------------
 
-        return self.Response(
-            success=True,
-            url=state_decoded.redirect_uri,
-            token=opaque_token,
+        cookie = Cookie(
+            name=TOKEN_COOKIE_NAME,
+            value=opaque_token,
+            domain=TOKEN_COOKIE_DOMAIN,
+            http_only=True,
+            same_site=True,
+            secure=True,
         )
 
-    def create_token(
+        actual_redirect_url = append_query_parameters(
+            url=state.redirect_uri,
+            query_extra={'success': '1'},
+        )
+
+        return TemporaryRedirect(
+            url=actual_redirect_url,
+            cookies=(cookie,),
+        )
+
+    def _handle_failed_login(self, state: AuthState) -> TemporaryRedirect:
+        """
+
+        :param state:
+        :return:
+        """
+        actual_redirect_url = append_query_parameters(
+            url=state.redirect_uri,
+            query_extra={'success': '0'},
+        )
+
+        return TemporaryRedirect(
+            url=actual_redirect_url,
+        )
+
+    def _create_token(
             self,
             session: db.Session,
             issued: datetime,
@@ -208,18 +270,13 @@ class OpenIdAuthenticateCallback(Endpoint):
             expires=expires,
             actor=subject,
             subject=subject,
-            scope=[
-                'meteringpoints.read',
-                'measurements.read',
-            ],
+            scope=scope,
         )
 
-        internal_token_encoded = token_encoder.encode(
-            obj=internal_token,
-        )
+        internal_token_encoded = internal_token_encoder \
+            .encode(internal_token)
 
-        # opaque_token = str(uuid4())
-        opaque_token = internal_token_encoded
+        opaque_token = str(uuid4())
 
         session.add(DbToken(
             subject=subject,
@@ -230,3 +287,91 @@ class OpenIdAuthenticateCallback(Endpoint):
         ))
 
         return opaque_token
+
+    def _register_user_login(self, session: db.Session, subject: str):
+        """
+        TODO
+        """
+        session.add(DbLoginRecord(
+            subject=subject,
+            created=datetime.now(tz=timezone.utc),
+        ))
+
+
+# -- Logout Endpoints --------------------------------------------------------
+
+
+class OpenIdLogout(Endpoint):
+    """
+    Returns a logout URL which initiates a logout flow @ the
+    OpenID Connect Identity Provider.
+    """
+
+    @dataclass
+    class Request:
+        redirect_uri: str
+
+    @dataclass
+    class Response:
+        url: Optional[str] = field(default=None)
+
+    def handle_request(self, request: Request) -> Response:
+        """
+        Handle HTTP request.
+        """
+        return self.Response(
+            url=oidc.create_logout_url(),
+        )
+
+
+class OpenIdLogoutRedirect(Endpoint):
+    """
+    Redirects client to logout URL which initiates a logout flow @ the
+    OpenID Connect Identity Provider.
+    """
+
+    @dataclass
+    class Request:
+        redirect_uri: str
+
+    def handle_request(self, request: Request) -> TemporaryRedirect:
+        """
+        Handle HTTP request.
+        """
+        return TemporaryRedirect(
+            url=oidc.create_logout_url(),
+        )
+
+
+class OpenIdLogoutCallback(Endpoint):
+    """
+    Callback: Client is redirected to this endpoint from Identity Provider
+    after completing authentication flow.
+
+    TODO Cookie: HttpOnly, Secure, SameSite
+    TODO Cookie SKAL have timeout
+    """
+
+    @dataclass
+    class Request:
+        state: str
+        iss: Optional[str] = field(default=None)
+        code: Optional[str] = field(default=None)
+        scope: Optional[str] = field(default=None)
+        error: Optional[str] = field(default=None)
+        error_hint: Optional[str] = field(default=None)
+        error_description: Optional[str] = field(default=None)
+
+    @dataclass
+    class Response:
+        success: bool
+        url: str
+        token: Optional[str] = field(default=None)
+
+    @db.atomic()
+    def handle_request(
+            self,
+            request: Request,
+            session: db.Session,
+    ) -> TemporaryRedirect:
+        pass

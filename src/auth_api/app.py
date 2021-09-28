@@ -1,14 +1,17 @@
-from energytt_platform.api import Application, TokenGuard
+from energytt_platform.api import Application
 
-from auth_shared.config import TOKEN_SECRET
+from auth_api.config import INTERNAL_TOKEN_SECRET
+
 from .endpoints import (
     ForwardAuth,
+    InspectToken,
     CreateTestToken,
-    OpenIdAuthenticate,
-    OpenIdAuthenticateCallback,
-    GetMeteringPointDelegateList,
-    GrantMeteringPointDelegate,
-    RevokeMeteringPointDelegate,
+    OpenIdLogin,
+    OpenIdLoginRedirect,
+    OpenIdLoginCallback,
+    OpenIdLogout,
+    OpenIdLogoutRedirect,
+    OpenIdLogoutCallback,
 )
 
 
@@ -16,62 +19,72 @@ def create_app() -> Application:
     """
     Creates a new instance of the application.
     """
+
     app = Application.create(
         name='Auth API',
-        secret=TOKEN_SECRET,
+        secret=INTERNAL_TOKEN_SECRET,
         health_check_path='/health',
+    )
+
+    # -- OpenID Connect Login ------------------------------------------------
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/login',
+        endpoint=OpenIdLogin(),
+    )
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/login/redirect',
+        endpoint=OpenIdLoginRedirect(),
+    )
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/login/callback',
+        endpoint=OpenIdLoginCallback(),
+    )
+
+    # -- OpenID Connect Logout -----------------------------------------------
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/logout',
+        endpoint=OpenIdLogout(),
+    )
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/logout/redirect',
+        endpoint=OpenIdLogoutRedirect(),
+    )
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/logout/callback',
+        endpoint=OpenIdLogoutCallback(),
     )
 
     # -- Træfik integration --------------------------------------------------
 
     app.add_endpoint(
         method='GET',
-        path='/auth',
+        path='/token/forward-auth',
         endpoint=ForwardAuth(),
-    )
-
-    # -- OpenID Connect ------------------------------------------------------
-
-    app.add_endpoint(
-        method='GET',
-        path='/oidc/auth',
-        endpoint=OpenIdAuthenticate(),
-    )
-
-    app.add_endpoint(
-        method='GET',
-        path='/oidc/callback',
-        endpoint=OpenIdAuthenticateCallback(),
-    )
-
-    # -- MeteringPoint Delegates ---------------------------------------------
-
-    app.add_endpoint(
-        method='POST',
-        path='/delegates/meteringpoints/list',
-        endpoint=GetMeteringPointDelegateList(),
-        guards=[TokenGuard()],
-    )
-
-    app.add_endpoint(
-        method='POST',
-        path='/delegates/meteringpoints/grant',
-        endpoint=GrantMeteringPointDelegate(),
-        guards=[TokenGuard()],
-    )
-
-    app.add_endpoint(
-        method='POST',
-        path='/delegates/meteringpoints/revoke',
-        endpoint=RevokeMeteringPointDelegate(),
-        guards=[TokenGuard()],
     )
 
     # -- Testing/misc --------------------------------------------------------
 
     app.add_endpoint(
+        method='GET',
+        path='/token/inspect',
+        endpoint=InspectToken(),
+    )
+
+    app.add_endpoint(
         method='POST',
-        path='/create-test-token',
+        path='/token/create-test-token',
         endpoint=CreateTestToken(),
     )
 

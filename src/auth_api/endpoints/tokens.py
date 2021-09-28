@@ -1,34 +1,85 @@
-from typing import List, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from energytt_platform.models.auth import InternalToken
-from energytt_platform.api import Endpoint, Context, Unauthorized
 from energytt_platform.tokens import TokenEncoder
+from energytt_platform.models.auth import InternalToken
+from energytt_platform.auth import TOKEN_HEADER_NAME, TOKEN_COOKIE_NAME
+from energytt_platform.api import (
+    Endpoint,
+    Context,
+    HttpResponse,
+    Unauthorized,
+)
 
-from auth_shared.config import TOKEN_SECRET
-from auth_shared.db import db
-from auth_shared.queries import TokenQuery
+from auth_api.db import db
+from auth_api.queries import TokenQuery
+from auth_api.config import INTERNAL_TOKEN_SECRET
 
 
 class ForwardAuth(Endpoint):
     """
-    Mocked ForwardAuth endpoint for Træfik.
+    ForwardAuth endpoint for Træfik.
+
+    https://doc.traefik.io/traefik/v2.0/middlewares/forwardauth/
     """
 
-    @db.session()
-    def handle_request(self, context: Context, session: db.Session):
+    def handle_request(self, context: Context) -> HttpResponse:
         """
         Handle HTTP request.
         """
+        opaque_token = context.cookies.get(TOKEN_COOKIE_NAME)
+
+        if not opaque_token:
+            raise Unauthorized()
+
+        internal_token = self.get_internal_token(opaque_token)
+
+        if internal_token is None:
+            raise Unauthorized()
+
+        return HttpResponse(
+            status=200,
+            headers={
+                TOKEN_HEADER_NAME: f'Bearer: {internal_token}',
+            },
+        )
+
+    @db.session()
+    def get_internal_token(
+            self,
+            opaque_token: str,
+            session: db.Session,
+    ) -> str:
+        """
+        TODO
+
+        :param opaque_token:
+        :param session:
+        """
         token = TokenQuery(session) \
-            .has_opaque_token(context.raw_token) \
+            .has_opaque_token(opaque_token) \
+            .is_valid() \
             .one_or_none()
 
-        if token is None:
-            raise Unauthorized('Bad token! Maybe try "123" instead?')
+        if token:
+            return token.internal_token
 
-        if context.raw_token != '123':
-            raise Unauthorized('Bad token! Maybe try "123" instead?')
+
+class InspectToken(Endpoint):
+    """
+    TODO
+    """
+
+    @dataclass
+    class Response:
+        token: InternalToken
+
+    def handle_request(self, context: Context) -> Response:
+        """
+        Handle HTTP request.
+        """
+        return self.Response(
+            token=context.token,
+        )
 
 
 class CreateTestToken(Endpoint):
@@ -44,17 +95,13 @@ class CreateTestToken(Endpoint):
     class Response:
         token: str
 
-    def handle_request(
-            self,
-            request: Request,
-            context: Context,
-    ):
+    def handle_request(self, request: Request, context: Context) -> Response:
         """
         Handle HTTP request.
         """
         encoder = TokenEncoder(
             schema=InternalToken,
-            secret=TOKEN_SECRET,
+            secret=INTERNAL_TOKEN_SECRET,
         )
 
         return self.Response(
