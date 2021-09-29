@@ -1,13 +1,17 @@
-from energytt_platform.api import Application, ScopedGuard
+from energytt_platform.api import Application
 
-from .config import SERVICE_NAME
+from auth_api.config import INTERNAL_TOKEN_SECRET
+
 from .endpoints import (
-    OnboardUser,
     ForwardAuth,
-    OpenIdAuthenticate,
-    OpenIdAuthenticateCallback,
-    DemoEndpoint,
-    HealthCheck,
+    InspectToken,
+    CreateTestToken,
+    OpenIdLogin,
+    OpenIdLoginRedirect,
+    OpenIdLoginCallback,
+    OpenIdLogout,
+    OpenIdLogoutRedirect,
+    OpenIdLogoutCallback,
 )
 
 
@@ -15,60 +19,73 @@ def create_app() -> Application:
     """
     Creates a new instance of the application.
     """
-    app = Application(
-        name=SERVICE_NAME,
+
+    app = Application.create(
+        name='Auth API',
+        secret=INTERNAL_TOKEN_SECRET,
+        health_check_path='/health',
+    )
+
+    # -- OpenID Connect Login ------------------------------------------------
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/login',
+        endpoint=OpenIdLogin(),
     )
 
     app.add_endpoint(
         method='GET',
-        path='/health',
-        endpoint=HealthCheck(),
+        path='/oidc/login/redirect',
+        endpoint=OpenIdLoginRedirect(),
+    )
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/login/callback',
+        endpoint=OpenIdLoginCallback(),
+    )
+
+    # -- OpenID Connect Logout -----------------------------------------------
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/logout',
+        endpoint=OpenIdLogout(),
+    )
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/logout/redirect',
+        endpoint=OpenIdLogoutRedirect(),
+    )
+
+    app.add_endpoint(
+        method='GET',
+        path='/oidc/logout/callback',
+        endpoint=OpenIdLogoutCallback(),
+    )
+
+    # -- Træfik integration --------------------------------------------------
+
+    app.add_endpoint(
+        method='GET',
+        path='/token/forward-auth',
+        endpoint=ForwardAuth(),
+    )
+
+    # -- Testing/misc --------------------------------------------------------
+
+    app.add_endpoint(
+        method='GET',
+        path='/token/inspect',
+        endpoint=InspectToken(),
     )
 
     app.add_endpoint(
         method='POST',
-        path='/onboard',
-        endpoint=OnboardUser(),
+        path='/token/create-test-token',
+        endpoint=CreateTestToken(),
     )
-
-    app.add_endpoint(
-        method='GET',
-        path='/auth',
-        endpoint=ForwardAuth(),
-    )
-
-    app.add_endpoint(
-        method='GET',
-        path='/oidc/auth',
-        endpoint=OpenIdAuthenticate(),
-    )
-
-    app.add_endpoint(
-        method='GET',
-        path='/oidc/callback',
-        endpoint=OpenIdAuthenticateCallback(),
-    )
-
-    # app.add_endpoint(
-    #     method='GET',
-    #     path='/demo',
-    #     endpoint=DemoEndpoint(),
-    #     guards=[
-    #         # ServiceGuard(),
-    #         ScopedGuard('gc.read', 'gc.transfer'),
-    #     ],
-    # )
 
     return app
-
-    # return Application.create(
-    #     name=SERVICE_NAME,
-    #     endpoints=(
-    #         ('POST', '/onboard', OnboardUser()),
-    #         ('POST', '/auth', ForwardAuth()),
-    #
-    #         # OpenID Connect endpoints
-    #         ('GET',  '/oidc/auth', OpenIdAuthenticate()),
-    #         ('GET',  '/oidc/callback', OpenIdAuthenticateCallback()),
-    #     )
-    # )

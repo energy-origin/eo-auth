@@ -6,10 +6,7 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
-pytest-order = "*"
-pytest-depends = "*"
-pytest-asyncio = "*"
-waitress = "*"
+testcontainers = "*"
 
 [packages]
 pyjwt = "*"
