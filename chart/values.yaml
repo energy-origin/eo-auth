@@ -31,9 +31,9 @@ ett-base-helm-chart:
     deployment: auth-api
     type: ClusterIP
     port: 80
-#    proxy:
-#      host: "172.17.0.1"
-#      port: 8080
+    proxy:
+      host: "172.17.0.1"
+      port: 8080
 
   ingress:
     hosts:
