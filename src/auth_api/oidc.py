@@ -1,9 +1,9 @@
 import requests
 from serpyco import field
-from dataclasses import dataclass
-from typing import Optional, List, Any
-from datetime import datetime, timezone
 from authlib.jose import jwt
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Optional, List, Any, Tuple
 from authlib.integrations.requests_client import \
     OAuth2Session as OAuth2Session_
 
@@ -13,11 +13,12 @@ from .config import (
     DEBUG,
     OIDC_CLIENT_ID,
     OIDC_CLIENT_SECRET,
-    OIDC_WANTED_SCOPES,
+    # OIDC_WANTED_SCOPES,
     OIDC_LOGIN_URL,
     OIDC_TOKEN_URL,
     OIDC_JWKS_URL,
-    OIDC_LOGIN_REDIRECT_URL, OIDC_LOGOUT_URL,
+    OIDC_LOGIN_REDIRECT_URL,
+    OIDC_LOGOUT_URL,
 )
 
 
@@ -120,10 +121,10 @@ class OpenIDConnectToken:
     OpenID Connect ID token
     """
     expires_at: int
+    id_token: IdToken
+    userinfo_token: Optional[UserInfoToken] = field(default=None)
     scope: List[str] = field(default_factory=list)
     access_token: Optional[str] = field(default=None)
-    id_token: Optional[IdToken] = field(default=None)
-    userinfo_token: Optional[UserInfoToken] = field(default=None)
 
     @property
     def expires(self) -> datetime:
@@ -132,13 +133,21 @@ class OpenIDConnectToken:
         """
         return datetime.fromtimestamp(self.expires_at, tz=timezone.utc)
 
+    @property
+    def subject(self) -> Optional[str]:
+        """
+        TODO
+        """
+        if self.id_token:
+            return self.id_token.subject
+
 
 # -- OpenID Connect ----------------------------------------------------------
 
 
 class OAuth2Session(OAuth2Session_):
     """
-    TODO
+    Abstracting low-level OAuth2 actions to simplify testing.
     """
     def get_jwk(self) -> str:
         """
@@ -164,19 +173,22 @@ class OidcBackend(object):
         self.session = OAuth2Session(
             client_id=OIDC_CLIENT_ID,
             client_secret=OIDC_CLIENT_SECRET,
-            scope=OIDC_WANTED_SCOPES,
+            # scope=OIDC_WANTED_SCOPES,
         )
 
-    def create_authorization_url(self, state: Optional[str] = None):
+    def create_authorization_url(self, state: str, scope: Tuple[str, ...]) -> str:
         """
         :rtype: (str, str)
         :returns: Tuple of (login_url, state)
         """
-        return self.session.create_authorization_url(
+        url, _ = self.session.create_authorization_url(
             url=OIDC_LOGIN_URL,
             state=state,
             redirect_uri=OIDC_LOGIN_REDIRECT_URL,
+            scope=scope,
         )
+
+        return url
 
     def create_logout_url(self):
         """
@@ -203,14 +215,15 @@ class OidcBackend(object):
         scope = [s for s in token_raw.get('scope', '').split(' ') if s]
 
         token = OpenIDConnectToken(
-            expires_at=token_raw['expires_at'],
             scope=scope,
+            expires_at=token_raw['expires_at'],
+            id_token=self.parse_id_token(token_raw['id_token']),
         )
 
-        if token_raw.get('id_token'):
-            # Parse ID Token
-            token.id_token = \
-                self.parse_id_token(token_raw['id_token'])
+        # if token_raw.get('id_token'):
+        #     # Parse ID Token
+        #     token.id_token = \
+        #         self.parse_id_token(token_raw['id_token'])
 
         if token_raw.get('userinfo_token'):
             # Parse UserInfo Token
@@ -218,21 +231,6 @@ class OidcBackend(object):
                 self.parse_userinfo_token(token_raw['userinfo_token'])
 
         return token
-
-    # def refresh_token(self, refresh_token):
-    #     """
-    #     :param str refresh_token:
-    #     :rtype: OAuth2Token
-    #     """
-    #     try:
-    #         return self.session.refresh_token(
-    #             url=OIDC_TOKEN_URL,
-    #             refresh_token=refresh_token,
-    #             verify=not DEBUG,
-    #         )
-    #     except json.decoder.JSONDecodeError as e:
-    #         # logger.exception('JSONDecodeError from Hydra', extra={'doc': e.doc})
-    #         raise
 
     def parse_id_token(self, id_token: str) -> IdToken:
         """
@@ -261,40 +259,6 @@ class OidcBackend(object):
             schema=UserInfoToken,
             data=dict(raw_token),
         )
-
-    # @cached_property
-    # def jwks(self) -> str:
-    #     """
-    #     TODO cache?
-    #     """
-    #     jwks_response = requests.get(
-    #         url=OIDC_JWKS_URL,
-    #         verify=not DEBUG,
-    #     )
-    #
-    #     return jwks_response.content.decode()
-
-    # def get_jwks(self):
-    #     """
-    #     TODO cache?
-    #     :rtype: str
-    #     """
-    #     jwks = redis.get('HYDRA_JWKS')
-    #
-    #     if jwks is None:
-    #         jwks_response = requests.get(url=OIDC_WELLKNOWN_URL, verify=not DEBUG)
-    #         jwks = jwks_response.content
-    #         redis.set('HYDRA_JWKS', jwks.decode(), ex=3600)
-    #
-    #     return jwks.decode()
-
-    # def get_logout_url(self):
-    #     """
-    #     Returns the url do redirect the user to, to complete the logout.
-    #     :rtype: str
-    #     """
-    #
-    #     return HYDRA_LOGOUT_ENDPOINT
 
 
 # -- Singletons --------------------------------------------------------------

@@ -1,5 +1,5 @@
 from uuid import uuid4
-from typing import Optional, List, Any, Dict
+from typing import Optional, List
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
@@ -40,43 +40,97 @@ class AuthState(Serializable):
     redirect_uri: str
 
 
-# -- Encoders ----------------------------------------------------------------
-
-
-state_encoder = TokenEncoder(
-    schema=AuthState,
-    secret=INTERNAL_TOKEN_SECRET,
-)
-
-internal_token_encoder = TokenEncoder(
-    schema=InternalToken,
-    secret=INTERNAL_TOKEN_SECRET,
-)
+# # -- Encoders ----------------------------------------------------------------
+#
+#
+# state_encoder = TokenEncoder(
+#     schema=AuthState,
+#     secret=INTERNAL_TOKEN_SECRET,
+# )
+#
+# internal_token_encoder = TokenEncoder(
+#     schema=InternalToken,
+#     secret=INTERNAL_TOKEN_SECRET,
+# )
 
 
 # -- Helpers -----------------------------------------------------------------
 
 
-def build_auth_url(redirect_uri: str) -> str:
+class OpenIdConnectEndpoint(Endpoint):
     """
-    TODO
+    Returns a login URL which initiates a login flow @ the
+    OpenID Connect Identity Provider.
     """
-    state = AuthState(
-        created=datetime.now(tz=timezone.utc),
-        redirect_uri=redirect_uri,
+
+    state_encoder = TokenEncoder(
+        schema=AuthState,
+        secret=INTERNAL_TOKEN_SECRET,
     )
 
-    state_encoded = state_encoder.encode(obj=state)
+    internal_token_encoder = TokenEncoder(
+        schema=InternalToken,
+        secret=INTERNAL_TOKEN_SECRET,
+    )
 
-    url, _ = oidc.create_authorization_url(state=state_encoded)
+    def encode_state(self, state: AuthState) -> str:
+        """
+        TODO
+        """
+        return self.state_encoder.encode(obj=state)
 
-    return url
+    def decode_state(self, state_encoded: str) -> AuthState:
+        """
+        TODO
+        """
+        return self.state_encoder.decode(state_encoded)
+
+    def build_auth_url(
+            self,
+            redirect_uri: str,
+            validate_cpr: bool,
+    ) -> str:
+        """
+        TODO
+        """
+        if validate_cpr:
+            scope = ('openid', 'mitid', 'nemid', 'ssn', 'userinfo_token')
+        else:
+            scope = ('openid', 'mitid', 'nemid')
+
+        state = AuthState(
+            created=datetime.now(tz=timezone.utc),
+            redirect_uri=redirect_uri,
+        )
+
+        state_encoded = self.encode_state(state)
+
+        return oidc.create_authorization_url(
+            state=state_encoded,
+            scope=scope,
+        )
+
+
+# def build_auth_url(redirect_uri: str) -> str:
+#     """
+#     TODO
+#     """
+#     state = AuthState(
+#         created=datetime.now(tz=timezone.utc),
+#         redirect_uri=redirect_uri,
+#     )
+#
+#     state_encoded = state_encoder.encode(obj=state)
+#
+#     url, _ = oidc.create_authorization_url(state=state_encoded)
+#
+#     return url
 
 
 # -- Login Endpoints ---------------------------------------------------------
 
 
-class OpenIdLogin(Endpoint):
+class OpenIdLogin(OpenIdConnectEndpoint):
     """
     Returns a login URL which initiates a login flow @ the
     OpenID Connect Identity Provider.
@@ -94,12 +148,15 @@ class OpenIdLogin(Endpoint):
         """
         Handle HTTP request.
         """
-        return self.Response(
-            url=build_auth_url(request.redirect_uri),
+        url = self.build_auth_url(
+            redirect_uri=request.redirect_uri,
+            validate_cpr=False,
         )
 
+        return self.Response(url=url)
 
-class OpenIdLoginRedirect(Endpoint):
+
+class OpenIdLoginRedirect(OpenIdConnectEndpoint):
     """
     Redirects client to login URL which initiates a login flow @ the
     OpenID Connect Identity Provider.
@@ -113,12 +170,15 @@ class OpenIdLoginRedirect(Endpoint):
         """
         Handle HTTP request.
         """
-        return TemporaryRedirect(
-            url=build_auth_url(request.redirect_uri),
+        url = self.build_auth_url(
+            redirect_uri=request.redirect_uri,
+            validate_cpr=False,
         )
 
+        return TemporaryRedirect(url=url)
 
-class OpenIdLoginCallback(Endpoint):
+
+class OpenIdLoginCallback(OpenIdConnectEndpoint):
     """
     Callback: Client is redirected to this endpoint from Identity Provider
     after completing authentication flow.
@@ -155,8 +215,8 @@ class OpenIdLoginCallback(Endpoint):
         TODO Handle errors from Identity Provider...
         """
         try:
-            state_decoded = state_encoder.decode(request.state)
-        except state_encoder.DecodeError:
+            state_decoded = self.decode_state(request.state)
+        except self.state_encoder.DecodeError:
             # TODO Handle...
             raise BadRequest()
 
@@ -166,16 +226,33 @@ class OpenIdLoginCallback(Endpoint):
             request.error_description,
         ))
 
-        if success:
-            return self._handle_successful_login(
-                request=request,
-                session=session,
-                state=state_decoded,
-            )
-        else:
+        if not success:
+            # Client failed to login via OpenID Connect
             return self._handle_failed_login(
                 state=state_decoded,
             )
+
+        oidc_token = oidc.fetch_token(
+            code=request.code,
+            state=request.state,
+        )
+
+        return self._handle_successful_login(
+            request=request,
+            session=session,
+            state=state_decoded,
+        )
+
+        # if success:
+        #     return self._handle_successful_login(
+        #         request=request,
+        #         session=session,
+        #         state=state_decoded,
+        #     )
+        # else:
+        #     return self._handle_failed_login(
+        #         state=state_decoded,
+        #     )
 
     def _handle_successful_login(
             self,
@@ -200,6 +277,8 @@ class OpenIdLoginCallback(Endpoint):
             code=request.code,
             state=request.state,
         )
+
+        print(oidc_token)
 
         # -- User ------------------------------------------------------------
 

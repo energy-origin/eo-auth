@@ -34,3 +34,18 @@ class DbToken(db.ModelBase):
     issued = sa.Column(sa.DateTime(timezone=True), nullable=False)
     expires = sa.Column(sa.DateTime(timezone=True), nullable=False)
     subject = sa.Column(sa.String(), index=True, nullable=False)
+
+
+class DbSubjectCpr(db.ModelBase):
+    """
+    Relationship between Signaturgruppen "subject" and encrypted CPR number.
+    """
+    __tablename__ = 'cpr_subject'
+    __table_args__ = (
+        sa.PrimaryKeyConstraint('id'),
+    )
+
+    id = sa.Column(sa.Integer(), index=True)
+    cpr = sa.Column(sa.String(), index=True, nullable=False)
+    subject = sa.Column(sa.String(), index=True, nullable=False)
+    created = sa.Column(sa.DateTime(timezone=True), nullable=False)
