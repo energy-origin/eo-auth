@@ -1,5 +1,5 @@
 from uuid import uuid4
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
@@ -11,6 +11,7 @@ from energytt_platform.api import \
     Endpoint, Cookie, BadRequest, TemporaryRedirect
 
 from auth_api.db import db
+from auth_api.queries import UserQuery
 from auth_api.models import DbToken, DbLoginRecord
 from auth_api.config import (
     INTERNAL_TOKEN_SECRET,
@@ -110,6 +111,14 @@ class OpenIdConnectEndpoint(Endpoint):
             scope=scope,
         )
 
+    def redirect_to_auth(self, **kwargs: Any) -> TemporaryRedirect:
+        """
+        TODO
+        """
+        return TemporaryRedirect(
+            url=self.build_auth_url(**kwargs),
+        )
+
 
 # def build_auth_url(redirect_uri: str) -> str:
 #     """
@@ -170,12 +179,16 @@ class OpenIdLoginRedirect(OpenIdConnectEndpoint):
         """
         Handle HTTP request.
         """
-        url = self.build_auth_url(
+        return self.redirect_to_auth(
             redirect_uri=request.redirect_uri,
             validate_cpr=False,
         )
-
-        return TemporaryRedirect(url=url)
+        # url = self.build_auth_url(
+        #     redirect_uri=request.redirect_uri,
+        #     validate_cpr=False,
+        # )
+        #
+        # return TemporaryRedirect(url=url)
 
 
 class OpenIdLoginCallback(OpenIdConnectEndpoint):
@@ -236,6 +249,16 @@ class OpenIdLoginCallback(OpenIdConnectEndpoint):
             code=request.code,
             state=request.state,
         )
+
+        user = UserQuery(session) \
+            .has_subject(oidc_token.subject) \
+            .one_or_none()
+
+        if user is None and not oidc_token.userinfo_token:
+            return self.redirect_to_auth(
+                redirect_uri=state_decoded.redirect_uri,
+                validate_cpr=False,
+            )
 
         return self._handle_successful_login(
             request=request,
