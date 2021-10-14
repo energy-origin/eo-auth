@@ -14,9 +14,14 @@ class DbUser(db.ModelBase):
     )
 
     id = sa.Column(sa.Integer(), index=True)
-    subject = sa.Column(sa.String(), index=True, nullable=False)
     cpr = sa.Column(sa.String(), index=True, nullable=False)
     created = sa.Column(sa.DateTime(timezone=True), nullable=False)
+
+    # Our own ID of the user
+    internal_subject = sa.Column(sa.String(), index=True, nullable=False)
+
+    # Identity Provider's ID of the user
+    external_subject = sa.Column(sa.String(), index=True, nullable=False)
 
 
 class DbLoginRecord(db.ModelBase):

@@ -47,11 +47,17 @@ class UserQuery(SqlQuery):
         """
         return self.filter(DbToken.opaque_token == opaque_token)
 
-    def has_subject(self, subject: str) -> 'UserQuery':
+    def has_internal_subject(self, subject: str) -> 'UserQuery':
         """
         TODO
         """
-        return self.filter(DbUser.subject == subject)
+        return self.filter(DbUser.internal_subject == subject)
+
+    def has_external_subject(self, subject: str) -> 'UserQuery':
+        """
+        TODO
+        """
+        return self.filter(DbUser.external_subject == subject)
 
     def has_cpr(self, cpr: str) -> 'UserQuery':
         """

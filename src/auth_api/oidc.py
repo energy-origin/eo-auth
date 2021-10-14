@@ -30,25 +30,26 @@ class IdToken:
     """
     OpenID Connect ID token
     """
-    acr: Any
-    amr: Any
-    at_hash: Any
-    aud: Any
-    auth_time: Any
-    exp: int
-    iat: int
-    identity_type: Any
-    idp: Any
-    iss: Any
-    loa: Any
-    nbf: Any
-    neb_sid: Any
-    session_expiry: Any
-    transaction_id: Any
-    sub: str
+    amr: Optional[Any] = field(default=None)
+    at_hash: Optional[Any] = field(default=None)
+    aud: Optional[Any] = field(default=None)
+    auth_time: Optional[Any] = field(default=None)
+    exp: Optional[int] = field(default=None)
+    iat: Optional[int] = field(default=None)
+    identity_type: Optional[Any] = field(default=None)
+    idp: Optional[Any] = field(default=None)
+    iss: Optional[Any] = field(default=None)
+    nbf: Optional[Any] = field(default=None)
+    neb_sid: Optional[Any] = field(default=None)
+    session_expiry: Optional[Any] = field(default=None)
+    transaction_id: Optional[Any] = field(default=None)
+    sub: Optional[int] = field(default=None)
+    acr: Optional[Any] = field(default=None)
+    loa: Optional[Any] = field(default=None)
+    idp_environment: Optional[Any] = field(default=None)
 
     @property
-    def subject(self) -> str:
+    def subject(self) -> Optional[int]:
         """
         TODO
         """
@@ -74,27 +75,27 @@ class UserInfoToken:
     """
     OpenID Connect UserInfo token
     """
-    acr: Any
-    amr: Any
-    aud: Any
-    auth_time: Any
-    exp: int
-    iat: int
-    identity_type: Any
-    idp: Any
-    iss: Any
-    loa: Any
-    nbf: Any
-    sub: Any
-    transaction_id: Any
-    mitid_age: Any = field(dict_key='mitid.age')
-    mitid_date_of_birth: Any = field(dict_key='mitid.date_of_birth')
-    mitid_identity_name: Any = field(dict_key='mitid.identity_name')
-    mitid_uuid: Any = field(dict_key='mitid.uuid')
-    cpr: str = field(dict_key='dk.cpr')
+    acr: Optional[Any] = field(default=None)
+    amr: Optional[Any] = field(default=None)
+    aud: Optional[Any] = field(default=None)
+    auth_time: Optional[Any] = field(default=None)
+    exp: Optional[int] = field(default=None)
+    iat: Optional[int] = field(default=None)
+    identity_type: Optional[Any] = field(default=None)
+    idp: Optional[Any] = field(default=None)
+    iss: Optional[Any] = field(default=None)
+    loa: Optional[Any] = field(default=None)
+    nbf: Optional[Any] = field(default=None)
+    sub: Optional[str] = field(default=None)
+    transaction_id: Optional[Any] = field(default=None)
+    mitid_age: Optional[Any] = field(dict_key='mitid.age', default=None)
+    mitid_date_of_birth: Optional[Any] = field(dict_key='mitid.date_of_birth', default=None)
+    mitid_identity_name: Optional[Any] = field(dict_key='mitid.identity_name', default=None)
+    mitid_uuid: Optional[Any] = field(dict_key='mitid.uuid', default=None)
+    cpr: Optional[str] = field(dict_key='dk.cpr', default=None)
 
     @property
-    def subject(self) -> str:
+    def subject(self) -> Optional[str]:
         """
         TODO
         """
@@ -244,6 +245,7 @@ class OidcBackend(object):
         return simple_serializer.deserialize(
             schema=IdToken,
             data=dict(raw_token),
+            validate=False,
         )
 
     def parse_userinfo_token(self, userinfo_token: str) -> UserInfoToken:
@@ -258,6 +260,7 @@ class OidcBackend(object):
         return simple_serializer.deserialize(
             schema=UserInfoToken,
             data=dict(raw_token),
+            validate=False,
         )
 
 
