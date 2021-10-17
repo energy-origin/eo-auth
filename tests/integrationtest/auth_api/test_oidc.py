@@ -15,7 +15,7 @@ from auth_api.endpoints.oidc import AuthState
 from auth_api.config import (
     DEBUG,
     OIDC_TOKEN_URL,
-    OIDC_LOGIN_REDIRECT_URL,
+    OIDC_LOGIN_CALLBACK_URL,
     TOKEN_COOKIE_NAME,
     TOKEN_COOKIE_DOMAIN,
 )
@@ -251,7 +251,7 @@ class TestOidcCallback:
             grant_type='authorization_code',
             code='some-code',
             state=state_encoded,
-            redirect_uri=OIDC_LOGIN_REDIRECT_URL,
+            redirect_uri=OIDC_LOGIN_CALLBACK_URL,
             verify=not DEBUG,
         )
 

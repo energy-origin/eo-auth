@@ -17,7 +17,7 @@ from .config import (
     OIDC_LOGIN_URL,
     OIDC_TOKEN_URL,
     OIDC_JWKS_URL,
-    OIDC_LOGIN_REDIRECT_URL,
+    OIDC_LOGIN_CALLBACK_URL,
     OIDC_LOGOUT_URL,
 )
 
@@ -162,7 +162,7 @@ class OAuth2Session(OAuth2Session_):
         return jwks_response.content.decode()
 
 
-class OidcBackend(object):
+class SignaturgruppenBackend(object):
     """
     TODO
     """
@@ -177,19 +177,61 @@ class OidcBackend(object):
             # scope=OIDC_WANTED_SCOPES,
         )
 
-    def create_authorization_url(self, state: str, scope: Tuple[str, ...]) -> str:
+    def create_authorization_url(
+            self,
+            state: str,
+            callback_uri: str,
+            validate_ssn: bool,
+    ) -> str:
         """
-        :rtype: (str, str)
-        :returns: Tuple of (login_url, state)
+        Creates and returns an absolute URL to initiate an OpenID Connect
+        authorization flow at the Identity Provider.
+
+        :param state: An arbitrary string passed to the callback endpoint
+        :param callback_uri: URL to callback endpoint to return client to
+            after completing or interrupting the flow
+        :param validate_ssn: Whether or not to validate social security
+            number as part of the flow
+        :returns: Absolute URL @ Identity Provider
         """
+        if validate_ssn:
+            scope = ('openid', 'mitid', 'nemid', 'ssn', 'userinfo_token')
+        else:
+            scope = ('openid', 'mitid', 'nemid')
+
         url, _ = self.session.create_authorization_url(
             url=OIDC_LOGIN_URL,
+            redirect_uri=callback_uri,
             state=state,
-            redirect_uri=OIDC_LOGIN_REDIRECT_URL,
             scope=scope,
         )
 
         return url
+
+    # def create_authorization_url(
+    #         self,
+    #         callback_uri: str,
+    #         state: str,
+    #         scope: Tuple[str, ...],
+    # ) -> str:
+    #     """
+    #     Creates and returns an absolute URL to initiate an OpenID Connect
+    #     authorization flow at the Identity Provider.
+    #
+    #     :param callback_uri: URL to callback endpoint to return client to
+    #         after completing or interrupting the flow
+    #     :param state: An arbitrary string passed to the callback endpoint
+    #     :param scope: Scopes to request
+    #     :returns: Absolute URL @ Identity Provider
+    #     """
+    #     url, _ = self.session.create_authorization_url(
+    #         url=OIDC_LOGIN_URL,
+    #         redirect_uri=callback_uri,
+    #         state=state,
+    #         scope=scope,
+    #     )
+    #
+    #     return url
 
     def create_logout_url(self):
         """
@@ -208,7 +250,7 @@ class OidcBackend(object):
             grant_type='authorization_code',
             code=code,
             state=state,
-            redirect_uri=OIDC_LOGIN_REDIRECT_URL,
+            redirect_uri=OIDC_LOGIN_CALLBACK_URL,
             verify=not DEBUG,
         )
 
@@ -267,4 +309,4 @@ class OidcBackend(object):
 # -- Singletons --------------------------------------------------------------
 
 
-oidc = OidcBackend()
+oidc = SignaturgruppenBackend()
