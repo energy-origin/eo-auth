@@ -1,6 +1,5 @@
 from .oidc import (
     OpenIdLogin,
-    # OpenIdLoginRedirect,
     OpenIDLoginCallback,
     OpenIDSsnCallback,
     OpenIdLogout,

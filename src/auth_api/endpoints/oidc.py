@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from uuid import uuid4
 from typing import Optional, List, Any, Union
 from datetime import datetime, timezone
@@ -11,7 +12,6 @@ from energytt_platform.api import \
     Endpoint, Cookie, BadRequest, TemporaryRedirect
 
 from auth_api.db import db
-from auth_api.queries import UserQuery
 from auth_api.models import DbToken, DbLoginRecord, DbUser
 from auth_api.config import (
     INTERNAL_TOKEN_SECRET,
@@ -22,6 +22,7 @@ from auth_api.config import (
     OIDC_SSN_VALIDATE_CALLBACK_URL,
 )
 
+from ..controller import controller
 from ..oidc import oidc, OpenIDConnectToken
 
 
@@ -157,6 +158,12 @@ class OpenIDCallbackEndpoint(Endpoint):
 
     Request = OidcCallbackParams
 
+    def __init__(self, url: str):
+        """
+        :param url: Absolute, public URL to this endpoint
+        """
+        self.url = url
+
     @db.atomic()
     def handle_request(
             self,
@@ -191,12 +198,14 @@ class OpenIDCallbackEndpoint(Endpoint):
         token = oidc.fetch_token(
             code=request.code,
             state=request.state,
+            redirect_uri=self.url,
         )
 
-        # User is unknown when logging in for the first time
-        user = UserQuery(session) \
-            .has_external_subject(token.subject) \
-            .one_or_none()
+        # User is unknown when logging in for the first time and may be None
+        user = controller.get_user_by_external_subject(
+            session=session,
+            external_subject=token.subject,
+        )
 
         return self.on_oidc_flow_succeeded(
             session=session,
@@ -227,6 +236,8 @@ class OpenIDCallbackEndpoint(Endpoint):
 
         # TODO Add error codes to query
 
+        # Append (or override) query parameters to the return_url provided
+        # by the client, but keep all other query parameters
         actual_redirect_url = append_query_parameters(
             url=state.return_url,
             query_extra=query,
@@ -247,6 +258,9 @@ class OpenIDCallbackEndpoint(Endpoint):
         Invoked when OpenID Connect flow succeeds, and the client was
         returned to the callback endpoint.
 
+        Note: Inherited classes override this method and add some extra
+        logic before it is invoked.
+
         :param session: Database session
         :param state: OpenID Connect state object
         :param token: OpenID Connect token fetched from Identity Provider
@@ -259,7 +273,7 @@ class OpenIDCallbackEndpoint(Endpoint):
 
         self._register_user_login(
             session=session,
-            subject=user.internal_subject,
+            user=user,
         )
 
         # -- Token -----------------------------------------------------------
@@ -268,7 +282,7 @@ class OpenIDCallbackEndpoint(Endpoint):
             session=session,
             issued=token.id_token.issued,
             expires=token.id_token.expires,
-            subject=user.internal_subject,
+            subject=user.subject,
             scope=TOKEN_DEFAULT_SCOPES,
         )
 
@@ -305,7 +319,7 @@ class OpenIDCallbackEndpoint(Endpoint):
         :param user: The user who just logged in successfully
         """
         session.add(DbLoginRecord(
-            subject=user.internal_subject,
+            subject=user.subject,
             created=datetime.now(tz=timezone.utc),
         ))
 
@@ -373,9 +387,19 @@ class OpenIDLoginCallback(OpenIDCallbackEndpoint):
             the user is not registered in the system
         :returns: HTTP response
         """
+
         if user is None:
+            # If the user is not known by the Identity Provider's subject,
+            # we initiate a new OpenID Connect authorization flow, but this
+            # time requesting the user's social security number.
+            # This flow results in a callback to the OpenIDSsnCallback
+            # endpoint (below).
             return TemporaryRedirect(
-                url=self._create_validate_ssn_flow_url(state),
+                url=oidc.create_authorization_url(
+                    state=state_encoder.encode(state),
+                    callback_uri=OIDC_SSN_VALIDATE_CALLBACK_URL,
+                    validate_ssn=True,
+                ),
             )
 
         return super(OpenIDLoginCallback, self).on_oidc_flow_succeeded(
@@ -383,16 +407,6 @@ class OpenIDLoginCallback(OpenIDCallbackEndpoint):
             state=state,
             token=token,
             user=user,
-        )
-
-    def _create_validate_ssn_flow_url(self, state: AuthState) -> str:
-        """
-        TODO
-        """
-        return oidc.create_authorization_url(
-            state=state_encoder.encode(state),
-            callback_uri=OIDC_LOGIN_CALLBACK_URL,
-            validate_ssn=True,
         )
 
 
@@ -426,25 +440,17 @@ class OpenIDSsnCallback(OpenIDCallbackEndpoint):
         :returns: HTTP response
         """
         if user is None:
-            user = self._create_user(token)
-            session.add(user)
+            user = controller.attach_ssn_to_user(
+                session=session,
+                external_subject=token.subject,
+                ssn=token.ssn,
+            )
 
         return super(OpenIDSsnCallback, self).on_oidc_flow_succeeded(
             session=session,
             state=state,
             token=token,
             user=user,
-        )
-
-    def _create_user(self, token: OpenIDConnectToken) -> DbUser:
-        """
-        TODO
-        """
-        return DbUser(
-            internal_subject=str(uuid4()),
-            external_subject=token.subject,
-            cpr=token.userinfo_token.cpr,
-            created=datetime.now(tz=timezone.utc),
         )
 
 

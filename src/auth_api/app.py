@@ -3,7 +3,9 @@ from energytt_platform.api import Application
 from .config import (
     INTERNAL_TOKEN_SECRET,
     OIDC_LOGIN_CALLBACK_PATH,
+    OIDC_LOGIN_CALLBACK_URL,
     OIDC_SSN_VALIDATE_CALLBACK_PATH,
+    OIDC_SSN_VALIDATE_CALLBACK_URL,
     OIDC_LOGOUT_CALLBACK_PATH,
 )
 from .endpoints import (
@@ -11,7 +13,6 @@ from .endpoints import (
     InspectToken,
     CreateTestToken,
     OpenIdLogin,
-    # OpenIdLoginRedirect,
     OpenIDLoginCallback,
     OpenIDSsnCallback,
     OpenIdLogout,
@@ -33,28 +34,25 @@ def create_app() -> Application:
 
     # -- OpenID Connect Login ------------------------------------------------
 
+    # Login
     app.add_endpoint(
         method='GET',
         path='/oidc/login',
         endpoint=OpenIdLogin(),
     )
 
-    # app.add_endpoint(
-    #     method='GET',
-    #     path='/oidc/login/redirect',
-    #     endpoint=OpenIdLoginRedirect(),
-    # )
-
+    # Callback, after logging in
     app.add_endpoint(
         method='GET',
         path=OIDC_LOGIN_CALLBACK_PATH,
-        endpoint=OpenIDLoginCallback(),
+        endpoint=OpenIDLoginCallback(url=OIDC_LOGIN_CALLBACK_URL),
     )
 
+    # Callback, after verifying SSN
     app.add_endpoint(
         method='GET',
         path=OIDC_SSN_VALIDATE_CALLBACK_PATH,
-        endpoint=OpenIDSsnCallback(),
+        endpoint=OpenIDSsnCallback(url=OIDC_SSN_VALIDATE_CALLBACK_URL),
     )
 
     # -- OpenID Connect Logout -----------------------------------------------

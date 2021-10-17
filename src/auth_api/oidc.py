@@ -142,6 +142,14 @@ class OpenIDConnectToken:
         if self.id_token:
             return self.id_token.subject
 
+    @property
+    def ssn(self) -> Optional[str]:
+        """
+        TODO
+        """
+        if self.userinfo_token:
+            return self.userinfo_token.cpr
+
 
 # -- OpenID Connect ----------------------------------------------------------
 
@@ -195,8 +203,11 @@ class SignaturgruppenBackend(object):
         :returns: Absolute URL @ Identity Provider
         """
         if validate_ssn:
+            # scope = ('openid', 'mitid', 'nemid', 'ssn', 'userinfo_token')
             scope = ('openid', 'mitid', 'nemid', 'ssn', 'userinfo_token')
+            # raise Exception('asd')
         else:
+            # scope = ('openid', 'mitid', 'nemid', 'ssn', 'ssn_store', 'userinfo_token')
             scope = ('openid', 'mitid', 'nemid')
 
         url, _ = self.session.create_authorization_url(
@@ -241,7 +252,7 @@ class SignaturgruppenBackend(object):
 
         return OIDC_LOGOUT_URL
 
-    def fetch_token(self, code: str, state: str) -> OpenIDConnectToken:
+    def fetch_token(self, code: str, state: str, redirect_uri: str) -> OpenIDConnectToken:
         """
         TODO
         """
@@ -250,7 +261,7 @@ class SignaturgruppenBackend(object):
             grant_type='authorization_code',
             code=code,
             state=state,
-            redirect_uri=OIDC_LOGIN_CALLBACK_URL,
+            redirect_uri=redirect_uri,
             verify=not DEBUG,
         )
 
