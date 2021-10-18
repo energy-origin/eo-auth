@@ -15,37 +15,6 @@ class UserQuery(SqlQuery):
         """
         return self.session.query(DbUser)
 
-    # def has_opaque_token(self, opaque_token: str) -> 'UserQuery':
-    #     """
-    #     TODO
-    #     """
-    #     return self.filter(DbToken.opaque_token == opaque_token)
-
-    # def has_internal_subject2(self, subject: str) -> 'UserQuery':
-    #     """
-    #     TODO
-    #     """
-    #     return self.filter(DbUser.internal_subject == subject)
-
-    def has_external_subject(self, subject: str) -> 'UserQuery':
-        """
-        TODO
-        """
-        q = self.q \
-            .join(DbExternalUser, DbExternalUser.subject == DbUser.subject) \
-            .filter(DbExternalUser.external_subject == subject)
-
-        return self.__class__(
-            session=self.session,
-            q=q,
-        )
-
-    # def has_external_subject(self, subject: str) -> 'UserQuery':
-    #     """
-    #     TODO
-    #     """
-    #     return self.filter(DbUser.external_subject == subject)
-
     def has_ssn(self, ssn: str) -> 'UserQuery':
         """
         :param ssn: Social security number, encrypted
