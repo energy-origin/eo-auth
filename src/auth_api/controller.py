@@ -3,15 +3,16 @@ from typing import Optional, List
 from datetime import datetime, timezone
 
 from energytt_platform.tokens import TokenEncoder
+from energytt_platform.encrypt import aes256_encrypt
 from energytt_platform.models.auth import InternalToken
 
 from .db import db
-from .config import INTERNAL_TOKEN_SECRET
 from .queries import UserQuery, ExternalUserQuery
 from .models import DbUser, DbExternalUser, DbLoginRecord, DbToken
+from .config import INTERNAL_TOKEN_SECRET, SSN_ENCRYPTION_KEY
 
 
-# -- Encoders ----------------------------------------------------------------
+# -- Encoders & Encryption ---------------------------------------------------
 
 
 internal_token_encoder = TokenEncoder(
@@ -20,15 +21,14 @@ internal_token_encoder = TokenEncoder(
 )
 
 
-# -- Social security number --------------------------------------------------
-
-
 def encrypt_ssn(ssn: str) -> str:
-    pass
+    """
 
-
-def decrypt_ssn(ssn_encrypted: str) -> str:
-    pass
+    """
+    return aes256_encrypt(
+        data=ssn,
+        key=SSN_ENCRYPTION_KEY,
+    )
 
 
 # -- Database controller -----------------------------------------------------
@@ -73,15 +73,16 @@ class DatabaseController(object):
         :param ssn: Social security number, unencrypted
         :returns: TODO
         """
-        # TODO encrypt
+        ssn_encrypted = encrypt_ssn(ssn)
+
         user = UserQuery(session) \
-            .has_ssn(ssn) \
+            .has_ssn(ssn_encrypted) \
             .one_or_none()
 
         if user is None:
             user = DbUser(
                 subject=str(uuid4()),
-                ssn=ssn,  # TODO encrypt
+                ssn=ssn_encrypted,
             )
 
             session.add(user)
@@ -121,9 +122,11 @@ class DatabaseController(object):
         :param ssn: Social security number, unencrypted
         :returns: TODO
         """
+        ssn_encrypted = encrypt_ssn(ssn)
+
         user = DbUser(
             subject=str(uuid4()),
-            ssn=ssn,  # TODO encrypt
+            ssn=ssn_encrypted,
         )
 
         session.add(user)
