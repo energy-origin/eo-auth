@@ -39,25 +39,6 @@ class DatabaseController(object):
     Controls business logic for SQL database.
     """
 
-    # def get_external_user(
-    #         self,
-    #         session: db.Session,
-    #         identity_provider: str,
-    #         external_subject: str,
-    # ) -> Optional[DbExternalUser]:
-    #     """
-    #     TODO
-    #
-    #     :param session: Database session
-    #     :param identity_provider: ID/name of Identity Provider
-    #     :param external_subject: Identity Provider's subject
-    #     :returns: TODO
-    #     """
-    #     return ExternalUserQuery(session) \
-    #         .has_identity_provider(identity_provider) \
-    #         .has_external_subject(external_subject) \
-    #         .one_or_none()
-
     def get_user_by_external_subject(
             self,
             session: db.Session,

@@ -2,22 +2,20 @@ import requests
 from serpyco import field
 from authlib.jose import jwt
 from dataclasses import dataclass
+from typing import Optional, List, Any
 from datetime import datetime, timezone
-from typing import Optional, List, Any, Tuple
 from authlib.integrations.requests_client import \
     OAuth2Session as OAuth2Session_
 
 from energytt_platform.serialize import simple_serializer
 
-from .config import (
+from auth_api.config import (
     DEBUG,
     OIDC_CLIENT_ID,
     OIDC_CLIENT_SECRET,
-    # OIDC_WANTED_SCOPES,
     OIDC_LOGIN_URL,
     OIDC_TOKEN_URL,
     OIDC_JWKS_URL,
-    OIDC_LOGIN_CALLBACK_URL,
     OIDC_LOGOUT_URL,
 )
 
@@ -48,27 +46,6 @@ class IdToken:
     loa: Optional[Any] = field(default=None)
     idp_environment: Optional[Any] = field(default=None)
 
-    # @property
-    # def subject(self) -> Optional[int]:
-    #     """
-    #     TODO
-    #     """
-    #     return self.sub
-    #
-    # @property
-    # def issued(self) -> datetime:
-    #     """
-    #     TODO
-    #     """
-    #     return datetime.fromtimestamp(self.iat, tz=timezone.utc)
-    #
-    # @property
-    # def expires(self) -> datetime:
-    #     """
-    #     TODO
-    #     """
-    #     return datetime.fromtimestamp(self.exp, tz=timezone.utc)
-
 
 @dataclass
 class UserInfoToken:
@@ -93,27 +70,6 @@ class UserInfoToken:
     mitid_identity_name: Optional[Any] = field(dict_key='mitid.identity_name', default=None)
     mitid_uuid: Optional[Any] = field(dict_key='mitid.uuid', default=None)
     cpr: Optional[str] = field(dict_key='dk.cpr', default=None)
-
-    # @property
-    # def subject(self) -> Optional[str]:
-    #     """
-    #     TODO
-    #     """
-    #     return self.sub
-    #
-    # @property
-    # def issued(self) -> datetime:
-    #     """
-    #     TODO
-    #     """
-    #     return datetime.fromtimestamp(self.iat, tz=timezone.utc)
-    #
-    # @property
-    # def expires(self) -> datetime:
-    #     """
-    #     TODO
-    #     """
-    #     return datetime.fromtimestamp(self.exp, tz=timezone.utc)
 
 
 @dataclass
@@ -199,7 +155,6 @@ class SignaturgruppenBackend(object):
         self.session = OAuth2Session(
             client_id=OIDC_CLIENT_ID,
             client_secret=OIDC_CLIENT_SECRET,
-            # scope=OIDC_WANTED_SCOPES,
         )
 
     def create_authorization_url(
@@ -236,31 +191,6 @@ class SignaturgruppenBackend(object):
 
         return url
 
-    # def create_authorization_url(
-    #         self,
-    #         callback_uri: str,
-    #         state: str,
-    #         scope: Tuple[str, ...],
-    # ) -> str:
-    #     """
-    #     Creates and returns an absolute URL to initiate an OpenID Connect
-    #     authorization flow at the Identity Provider.
-    #
-    #     :param callback_uri: URL to callback endpoint to return client to
-    #         after completing or interrupting the flow
-    #     :param state: An arbitrary string passed to the callback endpoint
-    #     :param scope: Scopes to request
-    #     :returns: Absolute URL @ Identity Provider
-    #     """
-    #     url, _ = self.session.create_authorization_url(
-    #         url=OIDC_LOGIN_URL,
-    #         redirect_uri=callback_uri,
-    #         state=state,
-    #         scope=scope,
-    #     )
-    #
-    #     return url
-
     def create_logout_url(self):
         """
         Returns the url do redirect the user to, to complete the logout.
@@ -285,16 +215,13 @@ class SignaturgruppenBackend(object):
         # TODO Test these:
         scope = [s for s in token_raw.get('scope', '').split(' ') if s]
 
+        id_token = self.parse_id_token(token_raw['id_token'])
+
         token = OpenIDConnectToken(
             scope=scope,
             expires_at=token_raw['expires_at'],
-            id_token=self.parse_id_token(token_raw['id_token']),
+            id_token=id_token,
         )
-
-        # if token_raw.get('id_token'):
-        #     # Parse ID Token
-        #     token.id_token = \
-        #         self.parse_id_token(token_raw['id_token'])
 
         if token_raw.get('userinfo_token'):
             # Parse UserInfo Token

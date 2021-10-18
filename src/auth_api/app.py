@@ -8,16 +8,20 @@ from .config import (
     OIDC_SSN_VALIDATE_CALLBACK_URL,
     OIDC_LOGOUT_CALLBACK_PATH,
 )
-from .endpoints import (
-    ForwardAuth,
-    InspectToken,
-    CreateTestToken,
+
+from .oidc import (
     OpenIdLogin,
     OpenIDLoginCallback,
     OpenIDSsnCallback,
     OpenIdLogout,
     OpenIdLogoutRedirect,
     OpenIdLogoutCallback,
+)
+
+from .tokens import (
+    ForwardAuth,
+    InspectToken,
+    CreateTestToken,
 )
 
 

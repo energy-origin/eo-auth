@@ -10,6 +10,7 @@ from energytt_platform.api import \
 
 from auth_api.db import db
 from auth_api.models import DbUser
+from auth_api.controller import db_controller
 from auth_api.config import (
     INTERNAL_TOKEN_SECRET,
     TOKEN_COOKIE_NAME,
@@ -19,8 +20,7 @@ from auth_api.config import (
     OIDC_SSN_VALIDATE_CALLBACK_URL,
 )
 
-from ..controller import db_controller
-from ..oidc import oidc, OpenIDConnectToken
+from .signaturgruppen import oidc, OpenIDConnectToken
 
 
 # -- Error codes -------------------------------------------------------------
