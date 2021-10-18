@@ -9,51 +9,14 @@ from unittest.mock import patch
 from authlib.jose import jwt, jwk
 from flask.testing import FlaskClient
 from datetime import datetime, timezone, timedelta
-from testcontainers.postgres import PostgresContainer
 
 from energytt_platform.tokens import TokenEncoder
-from energytt_platform.sql import SqlEngine, POSTGRES_VERSION
 
 from auth_api.app import create_app
 from auth_api.endpoints.oidc import AuthState
-from auth_api.db import db as _db
 from auth_api.config import INTERNAL_TOKEN_SECRET
 
 from .keys import PRIVATE_KEY, PUBLIC_KEY
-
-
-# -- SQL ---------------------------------------------------------------------
-
-
-@pytest.fixture(scope='function')
-def psql_uri():
-    """
-    TODO
-    """
-    image = f'postgres:{POSTGRES_VERSION}'
-
-    with PostgresContainer(image) as psql:
-        yield psql.get_connection_url()
-
-
-@pytest.fixture(scope='function')
-def db(psql_uri: str):
-    """
-    TODO
-    """
-    with patch('auth_api.db.db.uri', new=psql_uri):
-        yield _db
-
-
-@pytest.fixture(scope='function')
-def session(db: SqlEngine):
-    """
-    TODO
-    """
-    db.apply_schema()
-
-    with db.make_session() as session:
-        yield session
 
 
 # -- API ---------------------------------------------------------------------

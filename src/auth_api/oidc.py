@@ -48,26 +48,26 @@ class IdToken:
     loa: Optional[Any] = field(default=None)
     idp_environment: Optional[Any] = field(default=None)
 
-    @property
-    def subject(self) -> Optional[int]:
-        """
-        TODO
-        """
-        return self.sub
-
-    @property
-    def issued(self) -> datetime:
-        """
-        TODO
-        """
-        return datetime.fromtimestamp(self.iat, tz=timezone.utc)
-
-    @property
-    def expires(self) -> datetime:
-        """
-        TODO
-        """
-        return datetime.fromtimestamp(self.exp, tz=timezone.utc)
+    # @property
+    # def subject(self) -> Optional[int]:
+    #     """
+    #     TODO
+    #     """
+    #     return self.sub
+    #
+    # @property
+    # def issued(self) -> datetime:
+    #     """
+    #     TODO
+    #     """
+    #     return datetime.fromtimestamp(self.iat, tz=timezone.utc)
+    #
+    # @property
+    # def expires(self) -> datetime:
+    #     """
+    #     TODO
+    #     """
+    #     return datetime.fromtimestamp(self.exp, tz=timezone.utc)
 
 
 @dataclass
@@ -94,26 +94,26 @@ class UserInfoToken:
     mitid_uuid: Optional[Any] = field(dict_key='mitid.uuid', default=None)
     cpr: Optional[str] = field(dict_key='dk.cpr', default=None)
 
-    @property
-    def subject(self) -> Optional[str]:
-        """
-        TODO
-        """
-        return self.sub
-
-    @property
-    def issued(self) -> datetime:
-        """
-        TODO
-        """
-        return datetime.fromtimestamp(self.iat, tz=timezone.utc)
-
-    @property
-    def expires(self) -> datetime:
-        """
-        TODO
-        """
-        return datetime.fromtimestamp(self.exp, tz=timezone.utc)
+    # @property
+    # def subject(self) -> Optional[str]:
+    #     """
+    #     TODO
+    #     """
+    #     return self.sub
+    #
+    # @property
+    # def issued(self) -> datetime:
+    #     """
+    #     TODO
+    #     """
+    #     return datetime.fromtimestamp(self.iat, tz=timezone.utc)
+    #
+    # @property
+    # def expires(self) -> datetime:
+    #     """
+    #     TODO
+    #     """
+    #     return datetime.fromtimestamp(self.exp, tz=timezone.utc)
 
 
 @dataclass
@@ -128,11 +128,20 @@ class OpenIDConnectToken:
     access_token: Optional[str] = field(default=None)
 
     @property
-    def expires(self) -> datetime:
+    def issued(self) -> Optional[datetime]:
         """
         TODO
         """
-        return datetime.fromtimestamp(self.expires_at, tz=timezone.utc)
+        if self.id_token:
+            return datetime.fromtimestamp(self.id_token.iat, tz=timezone.utc)
+
+    @property
+    def expires(self) -> Optional[datetime]:
+        """
+        TODO
+        """
+        if self.id_token:
+            return datetime.fromtimestamp(self.id_token.exp, tz=timezone.utc)
 
     @property
     def subject(self) -> Optional[str]:
@@ -140,7 +149,15 @@ class OpenIDConnectToken:
         TODO
         """
         if self.id_token:
-            return self.id_token.subject
+            return self.id_token.sub
+
+    @property
+    def identity_provider(self) -> Optional[str]:
+        """
+        TODO
+        """
+        if self.id_token:
+            return self.id_token.idp
 
     @property
     def ssn(self) -> Optional[str]:

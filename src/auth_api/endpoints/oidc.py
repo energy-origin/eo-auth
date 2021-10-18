@@ -1,18 +1,15 @@
-from abc import abstractmethod
-from uuid import uuid4
-from typing import Optional, List, Any, Union
+from typing import Optional, Any, Union
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
 from energytt_platform.tokens import TokenEncoder
 from energytt_platform.serialize import Serializable
-from energytt_platform.models.auth import InternalToken
 from energytt_platform.tools import append_query_parameters
 from energytt_platform.api import \
     Endpoint, Cookie, BadRequest, TemporaryRedirect
 
 from auth_api.db import db
-from auth_api.models import DbToken, DbLoginRecord, DbUser
+from auth_api.models import DbUser
 from auth_api.config import (
     INTERNAL_TOKEN_SECRET,
     TOKEN_COOKIE_NAME,
@@ -22,7 +19,7 @@ from auth_api.config import (
     OIDC_SSN_VALIDATE_CALLBACK_URL,
 )
 
-from ..controller import controller
+from ..controller import db_controller
 from ..oidc import oidc, OpenIDConnectToken
 
 
@@ -90,11 +87,6 @@ class OidcCallbackParams:
 
 state_encoder = TokenEncoder(
     schema=AuthState,
-    secret=INTERNAL_TOKEN_SECRET,
-)
-
-internal_token_encoder = TokenEncoder(
-    schema=InternalToken,
     secret=INTERNAL_TOKEN_SECRET,
 )
 
@@ -169,7 +161,7 @@ class OpenIDCallbackEndpoint(Endpoint):
             self,
             request: Request,
             session: db.Session,
-    ) -> Any:
+    ) -> TemporaryRedirect:
         """
         Handle request.
 
@@ -202,9 +194,10 @@ class OpenIDCallbackEndpoint(Endpoint):
         )
 
         # User is unknown when logging in for the first time and may be None
-        user = controller.get_user_by_external_subject(
+        user = db_controller.get_user_by_external_subject(
             session=session,
             external_subject=token.subject,
+            identity_provider=token.identity_provider,
         )
 
         return self.on_oidc_flow_succeeded(
@@ -218,12 +211,21 @@ class OpenIDCallbackEndpoint(Endpoint):
             self,
             state: AuthState,
             params: OidcCallbackParams,
-    ) -> Any:
+    ) -> TemporaryRedirect:
         """
-        Invoked when OpenID Connect flow fails, and the user was
-        returned to the callback endpoint.
+        Invoked when OpenID Connect flow fails, and the user was returned to
+        the callback endpoint. Redirects clients back to return_uri with
+        the necessary query parameters.
 
-        Redirects clients back to return_uri with necessary query parameters.
+        Note: Inherited classes override this method and add some extra
+        logic before it is invoked.
+
+        ----------------------------------------------------------------------
+        error:                error_description:
+        ----------------------------------------------------------------------
+        access_denied         mitid_user_aborted
+        access_denied         user_aborted
+        ----------------------------------------------------------------------
 
         :param state: State object
         :param params: Callback parameters from Identity Provider
@@ -235,6 +237,13 @@ class OpenIDCallbackEndpoint(Endpoint):
         }
 
         # TODO Add error codes to query
+
+        if params.error_description in ('mitid_user_aborted', 'user_aborted'):
+            query['error'] = ERROR_CODES['E1']
+            query['error_code'] = 'E1'
+        else:
+            query['error'] = ERROR_CODES['E0']
+            query['error_code'] = 'E0'
 
         # Append (or override) query parameters to the return_url provided
         # by the client, but keep all other query parameters
@@ -253,7 +262,7 @@ class OpenIDCallbackEndpoint(Endpoint):
             state: AuthState,
             token: OpenIDConnectToken,
             user: Optional[DbUser],
-    ) -> Any:
+    ) -> TemporaryRedirect:
         """
         Invoked when OpenID Connect flow succeeds, and the client was
         returned to the callback endpoint.
@@ -269,19 +278,24 @@ class OpenIDCallbackEndpoint(Endpoint):
         :returns: HTTP response
         """
 
+        # Inherited classes should make sure this method is only invoked
+        # if a user already exists, otherwise something went wrong
+        if user is None:
+            raise RuntimeError('Can not succeed flow without a user')
+
         # -- User ------------------------------------------------------------
 
-        self._register_user_login(
+        db_controller.register_user_login(
             session=session,
             user=user,
         )
 
         # -- Token -----------------------------------------------------------
 
-        opaque_token = self._create_token(
+        opaque_token = db_controller.create_token(
             session=session,
-            issued=token.id_token.issued,
-            expires=token.id_token.expires,
+            issued=token.issued,
+            expires=token.expires,
             subject=user.subject,
             scope=TOKEN_DEFAULT_SCOPES,
         )
@@ -297,6 +311,8 @@ class OpenIDCallbackEndpoint(Endpoint):
             secure=True,
         )
 
+        # Append (or override) query parameters to the return_url provided
+        # by the client, but keep all other query parameters
         actual_redirect_url = append_query_parameters(
             url=state.return_url,
             query_extra={'success': '1'},
@@ -306,56 +322,6 @@ class OpenIDCallbackEndpoint(Endpoint):
             url=actual_redirect_url,
             cookies=(cookie,),
         )
-
-    def _register_user_login(
-            self,
-            session: db.Session,
-            user: DbUser,
-    ):
-        """
-        Registers a user's successful login.
-
-        :param session: Database session
-        :param user: The user who just logged in successfully
-        """
-        session.add(DbLoginRecord(
-            subject=user.subject,
-            created=datetime.now(tz=timezone.utc),
-        ))
-
-    def _create_token(
-            self,
-            session: db.Session,
-            issued: datetime,
-            expires: datetime,
-            subject: str,
-            scope: List[str],
-    ) -> str:
-        """
-        TODO
-        """
-        internal_token = InternalToken(
-            issued=issued,
-            expires=expires,
-            actor=subject,
-            subject=subject,
-            scope=scope,
-        )
-
-        internal_token_encoded = internal_token_encoder \
-            .encode(internal_token)
-
-        opaque_token = str(uuid4())
-
-        session.add(DbToken(
-            subject=subject,
-            opaque_token=opaque_token,
-            internal_token=internal_token_encoded,
-            issued=issued,
-            expires=expires,
-        ))
-
-        return opaque_token
 
 
 class OpenIDLoginCallback(OpenIDCallbackEndpoint):
@@ -440,10 +406,16 @@ class OpenIDSsnCallback(OpenIDCallbackEndpoint):
         :returns: HTTP response
         """
         if user is None:
-            user = controller.attach_ssn_to_user(
+            user = db_controller.get_or_create_user(
                 session=session,
-                external_subject=token.subject,
                 ssn=token.ssn,
+            )
+
+            db_controller.attach_external_user(
+                session=session,
+                user=user,
+                identity_provider=token.identity_provider,
+                external_subject=token.subject,
             )
 
         return super(OpenIDSsnCallback, self).on_oidc_flow_succeeded(

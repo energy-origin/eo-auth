@@ -53,6 +53,29 @@ class UserQuery(SqlQuery):
         return self.filter(DbUser.ssn == ssn)
 
 
+class ExternalUserQuery(SqlQuery):
+    """
+    Query DbExternalUser.
+    """
+    def _get_base_query(self) -> orm.Query:
+        """
+        TODO
+        """
+        return self.session.query(DbExternalUser)
+
+    def has_external_subject(self, subject: str) -> 'ExternalUserQuery':
+        """
+        TODO
+        """
+        return self.filter(DbExternalUser.external_subject == subject)
+
+    def has_identity_provider(self, ip: str) -> 'ExternalUserQuery':
+        """
+        :param ip: ID/name of Identity Provider
+        """
+        return self.filter(DbExternalUser.identity_provider == ip)
+
+
 class TokenQuery(SqlQuery):
     """
     Query DbToken.

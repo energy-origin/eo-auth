@@ -1,5 +1,4 @@
 import sqlalchemy as sa
-from sqlalchemy import func
 from sqlalchemy.orm import relationship
 
 from .db import db
@@ -7,16 +6,19 @@ from .db import db
 
 class DbUser(db.ModelBase):
     """
-    TODO
+    Represents a user logging in the system.
+
+    Users are uniquely identified by their subject.
     """
     __tablename__ = 'user'
     __table_args__ = (
         sa.PrimaryKeyConstraint('subject'),
         sa.UniqueConstraint('subject'),
+        sa.UniqueConstraint('ssn'),
     )
 
     subject = sa.Column(sa.String(), index=True, nullable=False)
-    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=func.now())
+    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now())
 
     # Social security number, encrypted
     ssn = sa.Column(sa.String(), index=True, nullable=False)
@@ -34,11 +36,15 @@ class DbExternalUser(db.ModelBase):
     __tablename__ = 'user_external'
     __table_args__ = (
         sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('identity_provider', 'external_subject'),
     )
 
     id = sa.Column(sa.Integer(), primary_key=True, index=True)
-    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=func.now())
+    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now())
     subject = sa.Column(sa.String(), sa.ForeignKey('user.subject'), index=True, nullable=False)
+
+    # ID/name of Identity Provider
+    identity_provider = sa.Column(sa.String(), index=True, nullable=False)
 
     # Identity Provider's ID of the user
     external_subject = sa.Column(sa.String(), index=True, nullable=False)
@@ -58,7 +64,7 @@ class DbLoginRecord(db.ModelBase):
 
     id = sa.Column(sa.Integer(), index=True)
     subject = sa.Column(sa.String(), index=True, nullable=False)
-    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=func.now())
+    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now())
 
 
 class DbToken(db.ModelBase):
