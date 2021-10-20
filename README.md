@@ -1,12 +1,24 @@
-# Project Origin AccountService
+# Auth
 
-This is the repository for the Auth-domain - a part of [Energy Track and Trace](https://github.com/Energy-Track-and-Trace).
+This is the repository for the Auth-domain - a part of [Project Energy Track and Trace](https://github.com/Energy-Track-and-Trace).
 
 This domain is responsible for:
 
 - Authenticating users via OpenID Connect
-- Issue authorization tokens to clients
+- Issuing authorization-tokens to clients
+- Translating opaque tokens to internal tokens (via a Træfik ForwardAuth endpoint)
 
+
+# Content
+
+- Building and running the services
+    - Requirements
+    - Installation and running locally
+    - Building and running Docker images
+    - Running tests
+    - Environment variables
+- Architecture and implementation
+- Database and migrations
 
 # Installation and running locally
 
