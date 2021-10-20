@@ -23,7 +23,10 @@ internal_token_encoder = TokenEncoder(
 
 def encrypt_ssn(ssn: str) -> str:
     """
+    AES 256 encrypts social security number.
 
+    :param ssn: Social security number
+    :returns: Encrypted social security number
     """
     return aes256_encrypt(
         data=ssn,
@@ -46,12 +49,13 @@ class DatabaseController(object):
             external_subject: str,
     ) -> Optional[DbUser]:
         """
-        TODO
+        Looks up a user identified by its identity provider and the identity
+        provider's subject (ID).
 
         :param session: Database session
         :param identity_provider: ID/name of Identity Provider
         :param external_subject: Identity Provider's subject
-        :returns: TODO
+        :returns: User if exists, otherwise None
         """
         external_user = ExternalUserQuery(session) \
             .has_identity_provider(identity_provider) \
@@ -67,11 +71,11 @@ class DatabaseController(object):
             ssn: str,
     ) -> DbUser:
         """
-        TODO
+        Looks up a user by social security number.
 
         :param session: Database session
         :param ssn: Social security number, unencrypted
-        :returns: TODO
+        :returns: User if exists, otherwise None
         """
         ssn_encrypted = encrypt_ssn(ssn)
 
@@ -97,7 +101,7 @@ class DatabaseController(object):
             external_subject: str,
     ):
         """
-        TODO
+        Creates an external user and attaches it to a user.
 
         :param session: Database session
         :param user: The user
@@ -116,11 +120,11 @@ class DatabaseController(object):
             ssn: str,
     ) -> DbUser:
         """
-        TODO
+        Creates a new user.
 
         :param session: Database session
         :param ssn: Social security number, unencrypted
-        :returns: TODO
+        :returns: The newly created user
         """
         ssn_encrypted = encrypt_ssn(ssn)
 
@@ -140,6 +144,8 @@ class DatabaseController(object):
     ):
         """
         Logs a user's login.
+
+        TODO Add IP address?
 
         :param session: Database session
         :param user: The user
@@ -166,7 +172,7 @@ class DatabaseController(object):
         :param expires: Time when token expires
         :param subject: The subject to create token for
         :param scope: The scopes to grant
-        :returns: TODO
+        :returns: Opaque token
         """
         internal_token = InternalToken(
             issued=issued,

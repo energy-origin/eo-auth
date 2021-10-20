@@ -4,7 +4,7 @@ import os
 # -- General -----------------------------------------------------------------
 
 # Enable/disable debug mode
-DEBUG = True
+DEBUG = os.getenv('DEBUG') == '1'
 
 # Service' public URL
 SERVICE_URL = 'http://localhost:9096'

@@ -6,7 +6,7 @@ from .db import db
 
 class DbUser(db.ModelBase):
     """
-    Represents a user logging in the system.
+    Represents a user in the system.
 
     Users are uniquely identified by their subject.
     """
@@ -26,7 +26,7 @@ class DbUser(db.ModelBase):
 
 class DbExternalUser(db.ModelBase):
     """
-    Represents a user logging in via some Identity Provider.
+    Represents a user logging in via an Identity Provider.
 
     A single user (represented via the DbUser model) can have multiple logins
     using either different Identity Providers, or using different login method
