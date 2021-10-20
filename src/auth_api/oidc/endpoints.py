@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from energytt_platform.tokens import TokenEncoder
 from energytt_platform.serialize import Serializable
+from energytt_platform.auth import TOKEN_COOKIE_NAME
 from energytt_platform.tools import append_query_parameters
 from energytt_platform.api import \
     Endpoint, Cookie, BadRequest, TemporaryRedirect, Context, HttpResponse
@@ -13,7 +14,6 @@ from auth_api.models import DbUser
 from auth_api.controller import db_controller
 from auth_api.config import (
     INTERNAL_TOKEN_SECRET,
-    TOKEN_COOKIE_NAME,
     TOKEN_COOKIE_DOMAIN,
     TOKEN_DEFAULT_SCOPES,
     OIDC_LOGIN_CALLBACK_URL,
@@ -207,55 +207,6 @@ class OpenIDCallbackEndpoint(Endpoint):
             user=user,
         )
 
-    def on_oidc_flow_failed(
-            self,
-            state: AuthState,
-            params: OidcCallbackParams,
-    ) -> TemporaryRedirect:
-        """
-        Invoked when OpenID Connect flow fails, and the user was returned to
-        the callback endpoint. Redirects clients back to return_uri with
-        the necessary query parameters.
-
-        Note: Inherited classes override this method and add some extra
-        logic before it is invoked.
-
-        ----------------------------------------------------------------------
-        error:                error_description:
-        ----------------------------------------------------------------------
-        access_denied         mitid_user_aborted
-        access_denied         user_aborted
-        ----------------------------------------------------------------------
-
-        :param state: State object
-        :param params: Callback parameters from Identity Provider
-        :returns: Http response
-        """
-
-        query = {
-            'success': '0',
-        }
-
-        # TODO Add error codes to query
-
-        if params.error_description in ('mitid_user_aborted', 'user_aborted'):
-            query['error'] = ERROR_CODES['E1']
-            query['error_code'] = 'E1'
-        else:
-            query['error'] = ERROR_CODES['E0']
-            query['error_code'] = 'E0'
-
-        # Append (or override) query parameters to the return_url provided
-        # by the client, but keep all other query parameters
-        actual_redirect_url = append_query_parameters(
-            url=state.return_url,
-            query_extra=query,
-        )
-
-        return TemporaryRedirect(
-            url=actual_redirect_url,
-        )
-
     def on_oidc_flow_succeeded(
             self,
             session: db.Session,
@@ -321,6 +272,55 @@ class OpenIDCallbackEndpoint(Endpoint):
         return TemporaryRedirect(
             url=actual_redirect_url,
             cookies=(cookie,),
+        )
+
+    def on_oidc_flow_failed(
+            self,
+            state: AuthState,
+            params: OidcCallbackParams,
+    ) -> TemporaryRedirect:
+        """
+        Invoked when OpenID Connect flow fails, and the user was returned to
+        the callback endpoint. Redirects clients back to return_uri with
+        the necessary query parameters.
+
+        Note: Inherited classes override this method and add some extra
+        logic before it is invoked.
+
+        ----------------------------------------------------------------------
+        error:                error_description:
+        ----------------------------------------------------------------------
+        access_denied         mitid_user_aborted
+        access_denied         user_aborted
+        ----------------------------------------------------------------------
+
+        :param state: State object
+        :param params: Callback parameters from Identity Provider
+        :returns: Http response
+        """
+
+        query = {
+            'success': '0',
+        }
+
+        # TODO Add error codes to query
+
+        if params.error_description in ('mitid_user_aborted', 'user_aborted'):
+            query['error'] = ERROR_CODES['E1']
+            query['error_code'] = 'E1'
+        else:
+            query['error'] = ERROR_CODES['E0']
+            query['error_code'] = 'E0'
+
+        # Append (or override) query parameters to the return_url provided
+        # by the client, but keep all other query parameters
+        actual_redirect_url = append_query_parameters(
+            url=state.return_url,
+            query_extra=query,
+        )
+
+        return TemporaryRedirect(
+            url=actual_redirect_url,
         )
 
 
@@ -441,58 +441,15 @@ class OpenIdLogout(Endpoint):
         """
         cookie = Cookie(
             name=TOKEN_COOKIE_NAME,
-            value=opaque_token,
+            value='',
             domain=TOKEN_COOKIE_DOMAIN,
             http_only=True,
             same_site=True,
             secure=True,
+            expires=datetime.now(tz=timezone.utc),
         )
 
         return HttpResponse(
-
+            status=200,
+            cookies=(cookie,),
         )
-
-
-# class OpenIdLogoutRedirect(Endpoint):
-#     """
-#     Redirects client to logout URL which initiates a logout flow @ the
-#     OpenID Connect Identity Provider.
-#     """
-#
-#     @dataclass
-#     class Request:
-#         redirect_uri: str
-#
-#     def handle_request(self, request: Request) -> TemporaryRedirect:
-#         """
-#         Handle HTTP request.
-#         """
-#         return TemporaryRedirect(
-#             url=oidc.create_logout_url(),
-#         )
-#
-#
-# class OpenIdLogoutCallback(Endpoint):
-#     """
-#     Callback: Client is redirected to this endpoint from Identity Provider
-#     after completing authentication flow.
-#
-#     TODO Cookie: HttpOnly, Secure, SameSite
-#     TODO Cookie SKAL have timeout
-#     """
-#
-#     Request = OidcCallbackParams
-#
-#     @dataclass
-#     class Response:
-#         success: bool
-#         url: str
-#         token: Optional[str] = field(default=None)
-#
-#     @db.atomic()
-#     def handle_request(
-#             self,
-#             request: Request,
-#             session: db.Session,
-#     ) -> TemporaryRedirect:
-#         pass

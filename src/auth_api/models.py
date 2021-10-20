@@ -80,6 +80,7 @@ class DbToken(db.ModelBase):
 
     opaque_token = sa.Column(sa.String(), index=True, nullable=False)
     internal_token = sa.Column(sa.String(), nullable=False)
+    id_token = sa.Column(sa.String(), nullable=False)
     issued = sa.Column(sa.DateTime(timezone=True), nullable=False)
     expires = sa.Column(sa.DateTime(timezone=True), nullable=False)
     subject = sa.Column(sa.String(), index=True, nullable=False)

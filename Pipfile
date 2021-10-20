@@ -12,7 +12,7 @@ testcontainers = "*"
 pyjwt = "*"
 authlib = "*"
 requests = "*"
-peterplys = "0.4.1"
+peterplys = "0.4.4"
 
 [scripts]
 revision = "alembic --config=src/migrations/alembic.ini revision --autogenerate"

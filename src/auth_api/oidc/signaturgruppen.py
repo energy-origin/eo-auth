@@ -79,6 +79,7 @@ class OpenIDConnectToken:
     """
     expires_at: int
     id_token: IdToken
+    id_token_raw: str
     userinfo_token: Optional[UserInfoToken] = field(default=None)
     scope: List[str] = field(default_factory=list)
     access_token: Optional[str] = field(default=None)
@@ -221,6 +222,7 @@ class SignaturgruppenBackend(object):
             scope=scope,
             expires_at=token_raw['expires_at'],
             id_token=id_token,
+            id_token_raw=token_raw['id_token'],
         )
 
         if token_raw.get('userinfo_token'):

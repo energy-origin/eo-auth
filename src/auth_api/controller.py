@@ -7,7 +7,7 @@ from energytt_platform.encrypt import aes256_encrypt
 from energytt_platform.models.auth import InternalToken
 
 from .db import db
-from .queries import UserQuery, ExternalUserQuery
+from .queries import UserQuery, ExternalUserQuery, TokenQuery
 from .models import DbUser, DbExternalUser, DbLoginRecord, DbToken
 from .config import INTERNAL_TOKEN_SECRET, SSN_ENCRYPTION_KEY
 
@@ -155,6 +155,7 @@ class DatabaseController(object):
             issued: datetime,
             expires: datetime,
             subject: str,
+            id_token: str,
             scope: List[str],
     ) -> str:
         """
@@ -165,6 +166,7 @@ class DatabaseController(object):
         :param issued: Time when token is issued
         :param expires: Time when token expires
         :param subject: The subject to create token for
+        :param id_token: ID token from Identity Provider, raw/encoded
         :param scope: The scopes to grant
         :returns: TODO
         """
@@ -187,9 +189,32 @@ class DatabaseController(object):
             internal_token=internal_token_encoded,
             issued=issued,
             expires=expires,
+            id_token=id_token,
         ))
 
         return opaque_token
+
+    def get_token(
+            self,
+            session: db.Session,
+            opaque_token: str,
+            only_valid: bool = False,
+    ) -> Optional[DbToken]:
+        """
+        Looks up token by opaque token.
+
+        :param session: Database session
+        :param opaque_token: Opaque token
+        :param only_valid: Set to True to only fetch token if its valid
+        :returns: Token or None
+        """
+        query = TokenQuery(session) \
+            .has_opaque_token(opaque_token)
+
+        if only_valid:
+            query = query.is_valid()
+
+        return query.one_or_none()
 
 
 # -- Singletons --------------------------------------------------------------
