@@ -27,11 +27,11 @@ SQL_POOL_SIZE = int(os.getenv('SQL_POOL_SIZE', 1))
 
 # -- Tokens ------------------------------------------------------------------
 
-# The header to read internal tokens from
-TOKEN_HEADER_NAME = 'Authorization'
-
-# The cookie to set tokens in
-TOKEN_COOKIE_NAME = 'Authorization'
+# # The header to read internal tokens from
+# TOKEN_HEADER_NAME = 'Authorization'
+#
+# # The cookie to set tokens in
+# TOKEN_COOKIE_NAME = 'Authorization'
 
 # The domain to set token cookie on
 TOKEN_COOKIE_DOMAIN = '127.0.0.1'

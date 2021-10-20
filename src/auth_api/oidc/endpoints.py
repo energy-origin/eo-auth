@@ -6,7 +6,7 @@ from energytt_platform.tokens import TokenEncoder
 from energytt_platform.serialize import Serializable
 from energytt_platform.tools import append_query_parameters
 from energytt_platform.api import \
-    Endpoint, Cookie, BadRequest, TemporaryRedirect
+    Endpoint, Cookie, BadRequest, TemporaryRedirect, Context, HttpResponse
 
 from auth_api.db import db
 from auth_api.models import DbUser
@@ -435,63 +435,64 @@ class OpenIdLogout(Endpoint):
     OpenID Connect Identity Provider.
     """
 
-    @dataclass
-    class Request:
-        redirect_uri: str
-
-    @dataclass
-    class Response:
-        url: Optional[str] = field(default=None)
-
-    def handle_request(self, request: Request) -> Response:
+    def handle_request(self, context: Context) -> HttpResponse:
         """
         Handle HTTP request.
         """
-        return self.Response(
-            url=oidc.create_logout_url(),
+        cookie = Cookie(
+            name=TOKEN_COOKIE_NAME,
+            value=opaque_token,
+            domain=TOKEN_COOKIE_DOMAIN,
+            http_only=True,
+            same_site=True,
+            secure=True,
+        )
+
+        return HttpResponse(
+
         )
 
 
-class OpenIdLogoutRedirect(Endpoint):
-    """
-    Redirects client to logout URL which initiates a logout flow @ the
-    OpenID Connect Identity Provider.
-    """
-
-    @dataclass
-    class Request:
-        redirect_uri: str
-
-    def handle_request(self, request: Request) -> TemporaryRedirect:
-        """
-        Handle HTTP request.
-        """
-        return TemporaryRedirect(
-            url=oidc.create_logout_url(),
-        )
-
-
-class OpenIdLogoutCallback(Endpoint):
-    """
-    Callback: Client is redirected to this endpoint from Identity Provider
-    after completing authentication flow.
-
-    TODO Cookie: HttpOnly, Secure, SameSite
-    TODO Cookie SKAL have timeout
-    """
-
-    Request = OidcCallbackParams
-
-    @dataclass
-    class Response:
-        success: bool
-        url: str
-        token: Optional[str] = field(default=None)
-
-    @db.atomic()
-    def handle_request(
-            self,
-            request: Request,
-            session: db.Session,
-    ) -> TemporaryRedirect:
-        pass
+# class OpenIdLogoutRedirect(Endpoint):
+#     """
+#     Redirects client to logout URL which initiates a logout flow @ the
+#     OpenID Connect Identity Provider.
+#     """
+#
+#     @dataclass
+#     class Request:
+#         redirect_uri: str
+#
+#     def handle_request(self, request: Request) -> TemporaryRedirect:
+#         """
+#         Handle HTTP request.
+#         """
+#         return TemporaryRedirect(
+#             url=oidc.create_logout_url(),
+#         )
+#
+#
+# class OpenIdLogoutCallback(Endpoint):
+#     """
+#     Callback: Client is redirected to this endpoint from Identity Provider
+#     after completing authentication flow.
+#
+#     TODO Cookie: HttpOnly, Secure, SameSite
+#     TODO Cookie SKAL have timeout
+#     """
+#
+#     Request = OidcCallbackParams
+#
+#     @dataclass
+#     class Response:
+#         success: bool
+#         url: str
+#         token: Optional[str] = field(default=None)
+#
+#     @db.atomic()
+#     def handle_request(
+#             self,
+#             request: Request,
+#             session: db.Session,
+#     ) -> TemporaryRedirect:
+#         pass
