@@ -1,4 +1,4 @@
-from energytt_platform.api import Application
+from energytt_platform.api import Application, TokenGuard
 
 from .config import (
     INTERNAL_TOKEN_SECRET,
@@ -6,7 +6,6 @@ from .config import (
     OIDC_LOGIN_CALLBACK_URL,
     OIDC_SSN_VALIDATE_CALLBACK_PATH,
     OIDC_SSN_VALIDATE_CALLBACK_URL,
-    OIDC_LOGOUT_CALLBACK_PATH,
 )
 
 from .oidc import (
@@ -14,8 +13,6 @@ from .oidc import (
     OpenIDLoginCallback,
     OpenIDSsnCallback,
     OpenIdLogout,
-    OpenIdLogoutRedirect,
-    OpenIdLogoutCallback,
 )
 
 from .tokens import (
@@ -65,18 +62,7 @@ def create_app() -> Application:
         method='GET',
         path='/oidc/logout',
         endpoint=OpenIdLogout(),
-    )
-
-    app.add_endpoint(
-        method='GET',
-        path='/oidc/logout/redirect',
-        endpoint=OpenIdLogoutRedirect(),
-    )
-
-    app.add_endpoint(
-        method='GET',
-        path=OIDC_LOGOUT_CALLBACK_PATH,
-        endpoint=OpenIdLogoutCallback(),
+        guards=[TokenGuard()]
     )
 
     # -- Træfik integration --------------------------------------------------

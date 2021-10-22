@@ -3,6 +3,4 @@ from .endpoints import (
     OpenIDLoginCallback,
     OpenIDSsnCallback,
     OpenIdLogout,
-    OpenIdLogoutRedirect,
-    OpenIdLogoutCallback,
 )

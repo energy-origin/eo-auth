@@ -16,7 +16,7 @@ from auth_api.config import (
     OIDC_LOGIN_URL,
     OIDC_TOKEN_URL,
     OIDC_JWKS_URL,
-    OIDC_LOGOUT_URL,
+    OIDC_API_LOGOUT_URL,
 )
 
 
@@ -143,6 +143,21 @@ class OAuth2Session(OAuth2Session_):
 
         return jwks_response.content.decode()
 
+    def logout(self, id_token: str):
+        """
+        Provided an ID-token, this method invokes the back-channel logout
+        endpoint on the Identity Provider, which logs the user out on
+        their side, forcing the user to login again next time he is
+        redirected to the authorization URL.
+        """
+        response = requests.post(
+            url=OIDC_API_LOGOUT_URL,
+            json={'id_token': id_token}
+        )
+
+        if response.status_code != 200:
+            raise RuntimeError(f'Logout returned status {response.status_code}')
+
 
 class SignaturgruppenBackend(object):
     """
@@ -191,14 +206,6 @@ class SignaturgruppenBackend(object):
         )
 
         return url
-
-    def create_logout_url(self):
-        """
-        Returns the url do redirect the user to, to complete the logout.
-        :rtype: str
-        """
-
-        return OIDC_LOGOUT_URL
 
     def fetch_token(self, code: str, state: str, redirect_uri: str) -> OpenIDConnectToken:
         """
@@ -261,6 +268,15 @@ class SignaturgruppenBackend(object):
             data=dict(raw_token),
             validate=False,
         )
+
+    def logout(self, id_token: str):
+        """
+        Provided an ID-token, this method invokes the back-channel logout
+        endpoint on the Identity Provider, which logs the user out on
+        their side, forcing the user to login again next time he is
+        redirected to the authorization URL.
+        """
+        self.session.logout(id_token)
 
 
 # -- Singletons --------------------------------------------------------------

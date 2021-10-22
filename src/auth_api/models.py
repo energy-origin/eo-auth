@@ -15,13 +15,17 @@ class DbUser(db.ModelBase):
         sa.PrimaryKeyConstraint('subject'),
         sa.UniqueConstraint('subject'),
         sa.UniqueConstraint('ssn'),
+        sa.CheckConstraint('ssn != NULL OR cvr != null'),
     )
 
     subject = sa.Column(sa.String(), index=True, nullable=False)
     created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now())
 
     # Social security number, encrypted
-    ssn = sa.Column(sa.String(), index=True, nullable=False)
+    ssn = sa.Column(sa.String(), index=True)
+
+    # Social security number, encrypted
+    cvr = sa.Column(sa.String(), index=True)
 
 
 class DbExternalUser(db.ModelBase):

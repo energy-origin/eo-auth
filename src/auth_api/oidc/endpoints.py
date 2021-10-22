@@ -249,6 +249,7 @@ class OpenIDCallbackEndpoint(Endpoint):
             expires=token.expires,
             subject=user.subject,
             scope=TOKEN_DEFAULT_SCOPES,
+            id_token=token.id_token_raw,
         )
 
         # -- Response --------------------------------------------------------
@@ -435,10 +436,25 @@ class OpenIdLogout(Endpoint):
     OpenID Connect Identity Provider.
     """
 
-    def handle_request(self, context: Context) -> HttpResponse:
+    @db.atomic()
+    def handle_request(
+            self,
+            context: Context,
+            session: db.Session,
+    ) -> HttpResponse:
         """
         Handle HTTP request.
         """
+        token = db_controller.get_token(
+            session=session,
+            opaque_token=context.opaque_token,
+            only_valid=False,
+        )
+
+        if token is not None:
+            session.delete(token)
+            oidc.logout(token.id_token)
+
         cookie = Cookie(
             name=TOKEN_COOKIE_NAME,
             value='',

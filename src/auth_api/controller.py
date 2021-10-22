@@ -162,13 +162,17 @@ class DatabaseController(object):
         Creates an internal token with the provided scopes on behalf of
         the provided subject, and returns the opaque token.
 
+        The raw ID token is saved together with the token. It is used when
+        logging out the user via Signaturgruppen back-channel logout via
+        their API.
+
         :param session: Database session
         :param issued: Time when token is issued
         :param expires: Time when token expires
         :param subject: The subject to create token for
         :param id_token: ID token from Identity Provider, raw/encoded
         :param scope: The scopes to grant
-        :returns: TODO
+        :returns: Opaque token
         """
         internal_token = InternalToken(
             issued=issued,
