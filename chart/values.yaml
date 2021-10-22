@@ -40,5 +40,13 @@ ett-base-helm-chart:
       - localhost
       - dev2.eloprindelse.dk
     paths:
-      - /auth
+      - /api/auth
     servicePort: 9096
+    middlewares:
+      - auth-stripprefix
+
+  middleware:
+    stripPrefix:
+      name: auth-stripprefix
+      prefixes:
+        - /api/auth
