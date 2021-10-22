@@ -1,22 +1,20 @@
 import pytest
 from typing import Dict, Any
 from unittest.mock import MagicMock
-
 from flask.testing import FlaskClient
 from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlsplit
 
 from energytt_platform.sql import SqlEngine
 from energytt_platform.tokens import TokenEncoder
-from energytt_platform.auth import TOKEN_HEADER_NAME
+from energytt_platform.auth import TOKEN_HEADER_NAME, TOKEN_COOKIE_NAME
 from energytt_platform.api.testing import CookieTester
 
-from auth_api.endpoints.oidc import AuthState
+from auth_api.oidc import AuthState
 from auth_api.config import (
     DEBUG,
     OIDC_TOKEN_URL,
     OIDC_LOGIN_CALLBACK_URL,
-    TOKEN_COOKIE_NAME,
     TOKEN_COOKIE_DOMAIN,
 )
 
@@ -74,25 +72,28 @@ def assert_token(
 # -- Tests -------------------------------------------------------------------
 
 
-class TestOidcAuth:
+class TestOidcLogin:
     """
     Tests OpenID Connect Auth endpoint.
     """
 
-    def test__should_return_auth_url_with_correct_state(
+    def test__without_redirect__should_return_auth_url_as_json_with_correct_state(
             self,
             client: FlaskClient,
             state_encoder: TokenEncoder[AuthState],
     ):
         """
-        TODO
+        Omitting the 'redirect' parameter should result in the endpoint
+        returning the auth URL as part of JSON body.
         """
 
         # -- Act -------------------------------------------------------------
 
         r = client.get(
             path='/oidc/login',
-            query_string={'redirect_uri': 'http://return.com/'},
+            query_string={
+                'return_url': 'http://return.com/',
+            },
         )
 
         # -- Assert ----------------------------------------------------------
@@ -103,22 +104,26 @@ class TestOidcAuth:
         )
 
         assert r.status_code == 200
-        assert actual_state.redirect_uri == 'http://return.com/'
+        assert actual_state.return_url == 'http://return.com/'
 
-    def test__should_redirect_to_auth_url_with_correct_state(
+    def test__with_redirect__should_return_auth_url_as_json_with_correct_state(
             self,
             client: FlaskClient,
             state_encoder: TokenEncoder[AuthState],
     ):
         """
-        TODO
+        Including the 'redirect' parameter should result in the endpoint
+        returning the auth URL as part of a HTTP redirect.
         """
 
         # -- Act -------------------------------------------------------------
 
         r = client.get(
-            path='/oidc/login/redirect',
-            query_string={'redirect_uri': 'http://return.com/'},
+            path='/oidc/login',
+            query_string={
+                'return_url': 'http://return.com/',
+                'redirect': '1',
+            },
         )
 
         # -- Assert ----------------------------------------------------------
@@ -129,7 +134,7 @@ class TestOidcAuth:
         )
 
         assert r.status_code == 307
-        assert actual_state.redirect_uri == 'http://return.com/'
+        assert actual_state.return_url == 'http://return.com/'
 
     @pytest.mark.parametrize('path', [
         '/oidc/login',
@@ -211,13 +216,16 @@ class TestOidcCallback:
 
         state = AuthState(
             created=datetime.now(tz=timezone.utc),
-            redirect_uri='http://redirect-here.com',
+            return_url='http://redirect-here.com',
         )
 
         state_encoded = state_encoder.encode(state)
 
+        authorization_url = 'http://authorization.com'
+
         oauth2_session.get_jwk.return_value = jwk_public
         oauth2_session.fetch_token.return_value = token_raw
+        oauth2_session.create_authorization_url.return_value = authorization_url
 
         # -- Act -------------------------------------------------------------
 

@@ -23,7 +23,10 @@ internal_token_encoder = TokenEncoder(
 
 def encrypt_ssn(ssn: str) -> str:
     """
+    Encrypts social security number using encryption key from project config.
 
+    :param ssn: Social security number to encrypt
+    :returns: Encrypted social security number
     """
     return aes256_encrypt(
         data=ssn,

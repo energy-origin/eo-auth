@@ -13,7 +13,7 @@ from datetime import datetime, timezone, timedelta
 from energytt_platform.tokens import TokenEncoder
 
 from auth_api.app import create_app
-from auth_api.endpoints.oidc import AuthState
+from auth_api.oidc import AuthState
 from auth_api.config import INTERNAL_TOKEN_SECRET
 
 from .keys import PRIVATE_KEY, PUBLIC_KEY
@@ -35,7 +35,7 @@ def oauth2_session():
     """
     TODO
     """
-    with patch('auth_api.oidc.oidc.session') as session:
+    with patch('auth_api.oidc.signaturgruppen.oidc.session') as session:
         yield session
 
 
