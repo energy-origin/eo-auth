@@ -26,7 +26,7 @@ def psql_uri():
 
 
 @pytest.fixture(scope='function')
-def db(psql_uri: str):
+def db(psql_uri: str) -> SqlEngine:
     """
     TODO
     """
@@ -35,7 +35,7 @@ def db(psql_uri: str):
 
 
 @pytest.fixture(scope='function')
-def session(db: SqlEngine):
+def mock_session(db: SqlEngine) -> SqlEngine.Session:
     """
     TODO
     """

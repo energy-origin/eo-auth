@@ -2,7 +2,7 @@ from sqlalchemy import orm, func, and_
 
 from energytt_platform.sql import SqlQuery
 
-from .models import DbUser, DbExternalUser, DbToken
+from .models import DbUser, DbExternalUser, DbToken, DbLoginRecord
 
 
 class UserQuery(SqlQuery):
@@ -43,6 +43,23 @@ class ExternalUserQuery(SqlQuery):
         :param ip: ID/name of Identity Provider
         """
         return self.filter(DbExternalUser.identity_provider == ip)
+
+
+class LoginRecordQuery(SqlQuery):
+    """
+    Query DbLoginRecord.
+    """
+    def _get_base_query(self) -> orm.Query:
+        """
+        TODO
+        """
+        return self.session.query(DbLoginRecord)
+
+    def has_subject(self, subject: str) -> 'LoginRecordQuery':
+        """
+        TODO
+        """
+        return self.filter(DbLoginRecord.subject == subject)
 
 
 class TokenQuery(SqlQuery):

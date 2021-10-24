@@ -1,5 +1,5 @@
+from .models import AuthState
 from .endpoints import (
-    AuthState,
     OpenIdLogin,
     OpenIDLoginCallback,
     OpenIDSsnCallback,

@@ -3,11 +3,16 @@ from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
 from energytt_platform.tokens import TokenEncoder
-from energytt_platform.serialize import Serializable
 from energytt_platform.auth import TOKEN_COOKIE_NAME
 from energytt_platform.tools import append_query_parameters
-from energytt_platform.api import \
-    Endpoint, Cookie, BadRequest, TemporaryRedirect, Context, HttpResponse
+from energytt_platform.api import (
+    Endpoint,
+    Context,
+    HttpResponse,
+    TemporaryRedirect,
+    Cookie,
+    BadRequest,
+)
 
 from auth_api.db import db
 from auth_api.models import DbUser
@@ -20,66 +25,9 @@ from auth_api.config import (
     OIDC_SSN_VALIDATE_CALLBACK_URL,
 )
 
+from .errors import ERROR_CODES
+from .models import AuthState, OidcCallbackParams
 from .signaturgruppen import oidc, OpenIDConnectToken
-
-
-# -- Error codes -------------------------------------------------------------
-
-
-# Errors from Identity Provider translates into these errors codes
-# as an internal abstraction over OpenID Connect errors.
-
-ERROR_CODES = {
-    'E0': 'Unknown error from Identity Provider',
-    'E1': 'User interrupted',
-    'E3': 'User failed to verify SSN',
-    'E500': 'Internal Server Error',
-    'E501': 'Internal Server Error at Identity Provider',
-}
-
-# /callback?error_code=E501&error=Internal Serviver
-
-
-# -- Models ------------------------------------------------------------------
-
-
-@dataclass
-class AuthState(Serializable):
-    """
-    AuthState is an intermediate token generated when the user requests
-    an authorization URL. It encodes to a [JWT] string.
-
-    The token is included in the authorization URL, and is returned by the
-    OIDC Identity Provider when the client is redirected back.
-
-    It provides a way to keep this service stateless.
-    """
-    created: datetime
-    return_url: str
-
-    @classmethod
-    def create(cls, **kwargs) -> 'AuthState':
-        """
-        Creates a new instance of AuthState.
-        """
-        return cls(created=datetime.now(tz=timezone.utc), **kwargs)
-
-
-@dataclass
-class OidcCallbackParams:
-    """
-    Parameters provided by the Identity Provider when redirecting
-    clients back to callback endpoints.
-
-    TODO Describe each field separately
-    """
-    state: Optional[str] = field(default=None)
-    iss: Optional[str] = field(default=None)
-    code: Optional[str] = field(default=None)
-    scope: Optional[str] = field(default=None)
-    error: Optional[str] = field(default=None)
-    error_hint: Optional[str] = field(default=None)
-    error_description: Optional[str] = field(default=None)
 
 
 # -- Encoders ----------------------------------------------------------------
@@ -118,7 +66,7 @@ class OpenIdLogin(Endpoint):
         """
         Handle HTTP request.
         """
-        state = AuthState.create(
+        state = AuthState(
             return_url=request.return_url,
         )
 
@@ -159,39 +107,40 @@ class OpenIDCallbackEndpoint(Endpoint):
     @db.atomic()
     def handle_request(
             self,
-            request: Request,
+            request: OidcCallbackParams,
             session: db.Session,
     ) -> TemporaryRedirect:
         """
         Handle request.
-
-        TODO Handle errors from Identity Provider...
         """
+
+        # Decode state
         try:
             state = state_encoder.decode(request.state)
         except state_encoder.DecodeError:
             # TODO Handle...
             raise BadRequest()
 
-        failed = any((
-            request.error,
-            request.error_hint,
-            request.error_description,
-        ))
-
-        if failed:
-            # OpenID Connect flow failed
+        # Handle errors from Identity Provider
+        if request.error or request.error_description:
             return self.on_oidc_flow_failed(
                 state=state,
                 params=request,
             )
 
-        # TODO Handle if this fails:
-        token = oidc.fetch_token(
-            code=request.code,
-            state=request.state,
-            redirect_uri=self.url,
-        )
+        # Fetch token from Identity Provider
+        try:
+            token = oidc.fetch_token(
+                code=request.code,
+                state=request.state,
+                redirect_uri=self.url,
+            )
+        except:
+            # TODO Log this exception
+            return self._redirect_to_failure(
+                state=state,
+                error_code='E505',
+            )
 
         # User is unknown when logging in for the first time and may be None
         user = db_controller.get_user_by_external_subject(
@@ -299,19 +248,34 @@ class OpenIDCallbackEndpoint(Endpoint):
         :param params: Callback parameters from Identity Provider
         :returns: Http response
         """
+        if params.error_description in ('mitid_user_aborted', 'user_aborted'):
+            error_code = 'E1'
+        else:
+            error_code = 'E0'
 
+        return self._redirect_to_failure(
+            state=state,
+            error_code=error_code,
+        )
+
+    def _redirect_to_failure(
+            self,
+            state: AuthState,
+            error_code: str,
+    ) -> TemporaryRedirect:
+        """
+        Creates a 307-redirect to the return_url defined in the state
+        with query parameters appended appropriately according to the error.
+
+        :param state: State object
+        :param error_code: Internal error code
+        :returns: Http response
+        """
         query = {
             'success': '0',
+            'error_code': error_code,
+            'error': ERROR_CODES[error_code],
         }
-
-        # TODO Add error codes to query
-
-        if params.error_description in ('mitid_user_aborted', 'user_aborted'):
-            query['error'] = ERROR_CODES['E1']
-            query['error_code'] = 'E1'
-        else:
-            query['error'] = ERROR_CODES['E0']
-            query['error_code'] = 'E0'
 
         # Append (or override) query parameters to the return_url provided
         # by the client, but keep all other query parameters

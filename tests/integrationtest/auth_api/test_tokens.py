@@ -269,7 +269,7 @@ class TestForwardAuth:
 #     def test__valid_state_and_no_errors__should_set_cookie_and_redirect(
 #             self,
 #             client: FlaskClient,
-#             token_raw: Dict[str, Any],
+#             ip_token: Dict[str, Any],
 #             # id_token: MagicMock,
 #             session,
 #             oauth2_session: MagicMock,
@@ -288,7 +288,7 @@ class TestForwardAuth:
 #
 #         state_encoded = state_encoder.encode(state)
 #
-#         oauth2_session.fetch_token.return_value = token_raw
+#         oauth2_session.fetch_token.return_value = ip_token
 #
 #         # -- Act -------------------------------------------------------------
 #

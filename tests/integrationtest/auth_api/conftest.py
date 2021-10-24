@@ -30,13 +30,34 @@ def client() -> FlaskClient:
     return create_app().test_client
 
 
+# @pytest.fixture(scope='function')
+# def oauth2_session():
+#     """
+#     TODO
+#     """
+#     with patch('auth_api.oidc.signaturgruppen.oidc.session') as session:
+#         yield session
+
+
+# -- OAuth2 session methods --------------------------------------------------
+
+
 @pytest.fixture(scope='function')
-def oauth2_session():
+def mock_get_jwk():
     """
     TODO
     """
-    with patch('auth_api.oidc.signaturgruppen.oidc.session') as session:
-        yield session
+    with patch('auth_api.oidc.signaturgruppen.oidc.session.get_jwk') as get_jwk:
+        yield get_jwk
+
+
+@pytest.fixture(scope='function')
+def mock_fetch_token():
+    """
+    TODO
+    """
+    with patch('auth_api.oidc.signaturgruppen.oidc.session.fetch_token') as fetch_token:
+        yield fetch_token
 
 
 @pytest.fixture(scope='function')
@@ -56,7 +77,7 @@ def state_encoder() -> TokenEncoder[AuthState]:
 @pytest.fixture(scope='function')
 def jwk_public() -> str:
     """
-    TODO
+    Mocked public key from Identity Provider.
     """
     return jwk.dumps(PUBLIC_KEY, kty='RSA')
 
@@ -64,7 +85,7 @@ def jwk_public() -> str:
 @pytest.fixture(scope='function')
 def jwk_private() -> str:
     """
-    TODO
+    Mocked private key from Identity Provider.
     """
     return jwk.dumps(PRIVATE_KEY, kty='RSA')
 
@@ -73,9 +94,35 @@ def jwk_private() -> str:
 
 
 @pytest.fixture(scope='function')
+def token_subject() -> str:
+    """
+    Identity Provider's subject (used in mocked tokens).
+    """
+    return str(uuid4())
+
+
+@pytest.fixture(scope='function')
+def token_idp() -> str:
+    """
+    Identity Provider's name (used in mocked tokens).
+
+    Could be, for instance, 'mitid' or 'nemid'.
+    """
+    return 'mitid'
+
+
+@pytest.fixture(scope='function')
+def token_ssn() -> str:
+    """
+    Identity Provider's social security number (used in mocked tokens).
+    """
+    return str(uuid4())
+
+
+@pytest.fixture(scope='function')
 def token_issued() -> datetime:
     """
-    TODO
+    Time of issue Identity Provider's token.
     """
     return datetime.now(tz=timezone.utc)
 
@@ -83,19 +130,19 @@ def token_issued() -> datetime:
 @pytest.fixture(scope='function')
 def token_expires(token_issued: datetime) -> datetime:
     """
-    TODO
+    Time of expire Identity Provider's token.
     """
     return token_issued + timedelta(days=1)
 
 
 @pytest.fixture(scope='function')
-def token_raw(
+def ip_token(
     id_token_encoded: str,
     userinfo_token_encoded: str,
     token_expires: datetime,
 ) -> Dict[str, Any]:
     """
-    TODO
+    Mocked token from Identity Provider (unencoded).
     """
     return {
         'id_token': id_token_encoded,
@@ -110,6 +157,8 @@ def token_raw(
 
 @pytest.fixture(scope='function')
 def id_token(
+        token_subject: str,
+        token_idp: str,
         token_issued: datetime,
         token_expires: datetime,
 ) -> Dict[str, Any]:
@@ -123,18 +172,15 @@ def id_token(
         'exp': int(token_expires.timestamp()),
         'auth_time': int(token_issued.timestamp()),
         'aud': str(uuid4()),
-        # 'aud': '0a775a87-878c-4b83-abe3-ee29c720c3e7',
         'amr': ['code_app'],
         'at_hash': '-Y-YJBoneGN5sEk6vawM9A',
-        'sub': 'ad845954-ed1d-4c73-846a-ef9b4c36f6f8',
-        'idp': 'mitid',
+        'sub': token_subject,
+        'idp': token_idp,
         'acr': 'https://data.gov.dk/concept/core/nsis/Substantial',
         'neb_sid': str(uuid4()),
-        # 'neb_sid': '4e1bcbd3-d568-4319-9ce3-a1b110f86d53',
         'loa': 'https://data.gov.dk/concept/core/nsis/Substantial',
         'identity_type': 'private',
         'transaction_id': str(uuid4()),
-        # 'transaction_id': 'a805f253-e8ea-4457-9996-c67bf704ab4a',
         'session_expiry': '1632403505',
     }
 
@@ -157,7 +203,11 @@ def id_token_encoded(
 
 
 @pytest.fixture(scope='function')
-def userinfo_token() -> Dict[str, Any]:
+def userinfo_token(
+        token_subject: str,
+        token_idp: str,
+        token_ssn: str,
+) -> Dict[str, Any]:
     """
     TODO
     """
@@ -174,10 +224,10 @@ def userinfo_token() -> Dict[str, Any]:
         'loa': 'https://data.gov.dk/concept/core/nsis/Substantial',
         'acr': 'https://data.gov.dk/concept/core/nsis/Substantial',
         'identity_type': 'private',
-        'idp': 'mitid',
-        'dk.cpr': '0302669597',
+        'idp': token_idp,
+        'dk.cpr': token_ssn,
         'auth_time': '1632387312',
-        'sub': 'ad845954-ed1d-4c73-846a-ef9b4c36f6f8',
+        'sub': token_subject,
         'aud': '0a775a87-878c-4b83-abe3-ee29c720c3e7',
         'transaction_id': 'a805f253-e8ea-4457-9996-c67bf704ab4a',
     }
