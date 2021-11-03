@@ -1,5 +1,12 @@
+"""
+All OIDC callback endpoints have a few things in common. They interpret
+query parameters (passed on by the Identity Provider) identically, thus
+should also act identically for some cases.
+
+Thus, tests in this file are generic across all OIDC callback endpoints,
+and are therefore tested on all of those endpoints.
+"""
 import pytest
-from uuid import uuid4
 from typing import Dict, Any
 from unittest.mock import MagicMock
 from flask.testing import FlaskClient
@@ -15,16 +22,17 @@ from energytt_platform.api.testing import (
 
 from auth_api.db import db
 from auth_api.oidc import AuthState
-from auth_api.models import DbUser, DbExternalUser
+from auth_api.queries import LoginRecordQuery
 from auth_api.config import (
     TOKEN_COOKIE_DOMAIN,
     OIDC_LOGIN_CALLBACK_PATH,
     OIDC_SSN_VALIDATE_CALLBACK_PATH,
 )
 
+from .bases import OidcCallbackEndpointsSubjectKnownBase
+
 
 # -- Helpers -----------------------------------------------------------------
-from auth_api.queries import LoginRecordQuery
 
 
 def assert_token(
@@ -78,15 +86,10 @@ def callback_endpoint_path(request) -> str:
 # -- Tests -------------------------------------------------------------------
 
 
-class TestOidcCallbackEndpoints:
+class TestOidcCallbackEndpoints(object):
     """
-    All OIDC callback endpoints have a few things in common. They interpret
-    query parameters (passed on by the Identity Provider) identically, thus
-    should also act identically for some cases.
-
-    Thus, tests in this class are generic across all OIDC callback endpoints,
-    and are therefore tested on all of those endpoints
-    (see callback_endpoint_path below).
+    Common tests for all OIDC callback endpoints that require
+    no setup or teardown.
     """
 
     @pytest.mark.parametrize('state', [None, '', 'invalid-state'])
@@ -173,7 +176,7 @@ class TestOidcCallbackEndpoints:
             value='0',
         )
 
-    def test__fetch_token_fails__should_redirect_to_return_url_with_error_code(
+    def test__fetch_token_fails__should_redirect_to_return_url_with_error_code(  # noqa: E501
             self,
             client: FlaskClient,
             mock_fetch_token: MagicMock,
@@ -186,7 +189,7 @@ class TestOidcCallbackEndpoints:
         the state with success=0 and error.
 
         :param client: API client
-        :param mock_fetch_token: Mocked fetch_token() method @ OAuth2Session object
+        :param mock_fetch_token: Mocked fetch_token() method @ OAuth2Session
         :param state_encoder: AuthState encoder
         :param callback_endpoint_path: Endpoint path
         """
@@ -224,82 +227,12 @@ class TestOidcCallbackEndpoints:
         )
 
 
-class TestOidcCallbackEndpointsSubjectKnown:
+class TestOidcCallbackEndpointsSubjectKnown(OidcCallbackEndpointsSubjectKnownBase):  # noqa: E501
     """
-    Like above, tests all OIDC callback endpoints.
-
-    But these tests are specific for cases, where the Identity Provider's
-    subject is known to the system. A setup-method creates the user
-    before each test.
+    Common tests for all OIDC callback endpoints where the Identity
+    Provider's subject is known to the system. A setup-method creates
+    the user before each test (look at the base-class for details).
     """
-
-    @pytest.fixture(scope='function')
-    def internal_subject(self) -> str:
-        """
-        Our internal subject
-        """
-        return str(uuid4())
-
-    @pytest.fixture(scope='function')
-    def return_url(self) -> str:
-        """
-        Client's return_url
-        """
-        return 'http://redirect-here.com/foobar?foo=bar'
-
-    @pytest.fixture(scope='function')
-    def state_encoded(
-            self,
-            state_encoder: TokenEncoder[AuthState],
-            return_url: str,
-    ) -> str:
-        """
-        AuthState, encoded
-        """
-        state = AuthState(return_url=return_url)
-        state_encoded = state_encoder.encode(state)
-        return state_encoded
-
-    @pytest.fixture(scope='function', autouse=True)
-    def setup(
-            self,
-            mock_session: db.Session,
-            mock_get_jwk: MagicMock,
-            mock_fetch_token: MagicMock,
-            jwk_public: str,
-            ip_token: Dict[str, Any],
-            token_subject: str,
-            token_idp: str,
-            token_ssn: str,
-            internal_subject: str,
-    ) -> db.Session:
-        """
-        Inserts a mock-user into the database.
-        """
-
-        # -- OAuth2Session object methods ------------------------------------
-
-        mock_get_jwk.return_value = jwk_public
-        mock_fetch_token.return_value = ip_token
-
-        # -- Insert user into database ---------------------------------------
-
-        mock_session.begin()
-
-        mock_session.add(DbUser(
-            subject=internal_subject,
-            ssn=token_ssn,
-        ))
-
-        mock_session.add(DbExternalUser(
-            subject=internal_subject,
-            identity_provider=token_idp,
-            external_subject=token_subject,
-        ))
-
-        mock_session.commit()
-
-        return mock_session
 
     def test__should_307_redirect_to_correct_return_url(
             self,
@@ -436,7 +369,7 @@ class TestOidcCallbackEndpointsSubjectKnown:
 
         # -- Act -------------------------------------------------------------
 
-        r = client.get(
+        client.get(
             path=callback_endpoint_path,
             query_string={'state': state_encoded},
         )

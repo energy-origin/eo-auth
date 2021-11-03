@@ -1,4 +1,6 @@
-import pytest
+"""
+Tests specifically for OIDC login endpoint.
+"""
 from flask.testing import FlaskClient
 from urllib.parse import parse_qs, urlsplit
 
@@ -15,7 +17,13 @@ def get_auth_state_from_redirect_url(
         state_encoder: TokenEncoder[AuthState],
 ) -> AuthState:
     """
-    TODO
+    Provided a HTTP redirect Location from a OIDC login endpoint, this
+    method extract the 'state' query-parameter and decodes it for easy
+    assertion.
+
+    :param auth_url: The auth-URL returned by OIDC login endpoint
+    :param state_encoder: The AuthState encoder
+    :returns: Decoded AuthState object
     """
     url = urlsplit(auth_url)
     query = parse_qs(url.query)
@@ -28,7 +36,7 @@ def get_auth_state_from_redirect_url(
 
 class TestOidcLogin:
     """
-    Tests OpenID Connect Auth endpoint.
+    Tests specifically for OIDC login endpoint.
     """
 
     def test__without_redirect__should_return_auth_url_as_json_with_correct_state(
@@ -46,7 +54,7 @@ class TestOidcLogin:
         r = client.get(
             path='/oidc/login',
             query_string={
-                'return_url': 'http://return.com/',
+                'return_url': 'http://foobar.com/',
             },
         )
 
@@ -58,7 +66,7 @@ class TestOidcLogin:
         )
 
         assert r.status_code == 200
-        assert actual_state.return_url == 'http://return.com/'
+        assert actual_state.return_url == 'http://foobar.com/'
 
     def test__with_redirect__should_return_auth_url_as_json_with_correct_state(
             self,
@@ -75,7 +83,7 @@ class TestOidcLogin:
         r = client.get(
             path='/oidc/login',
             query_string={
-                'return_url': 'http://return.com/',
+                'return_url': 'http://foobar.com/',
                 'redirect': '1',
             },
         )
@@ -88,19 +96,15 @@ class TestOidcLogin:
         )
 
         assert r.status_code == 307
-        assert actual_state.return_url == 'http://return.com/'
+        assert actual_state.return_url == 'http://foobar.com/'
 
-    @pytest.mark.parametrize('path', [
-        '/oidc/login',
-        '/oidc/login/redirect',
-    ])
-    def test__omit_parameter_redirect_uri__should_return_status_400(
+    def test__omit_parameter_return_url__should_return_status_400(
             self,
-            path: str,
             client: FlaskClient,
     ):
         """
-        TODO
+        Omitting the 'return_url' parameter should result in the endpoint
+        returning HTTP status 400 Bad Request.
         """
 
         # -- Act -------------------------------------------------------------

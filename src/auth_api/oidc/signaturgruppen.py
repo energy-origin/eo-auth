@@ -1,9 +1,5 @@
 import requests
-from serpyco import field
 from authlib.jose import jwt
-from dataclasses import dataclass
-from typing import Optional, List, Any
-from datetime import datetime, timezone
 from authlib.integrations.requests_client import \
     OAuth2Session as OAuth2Session_
 
@@ -19,110 +15,11 @@ from auth_api.config import (
     OIDC_API_LOGOUT_URL,
 )
 
-
-# -- Data models -------------------------------------------------------------
-
-
-@dataclass
-class IdToken:
-    """
-    OpenID Connect ID token
-    """
-    amr: Optional[Any] = field(default=None)
-    at_hash: Optional[Any] = field(default=None)
-    aud: Optional[Any] = field(default=None)
-    auth_time: Optional[Any] = field(default=None)
-    exp: Optional[int] = field(default=None)
-    iat: Optional[int] = field(default=None)
-    identity_type: Optional[Any] = field(default=None)
-    idp: Optional[Any] = field(default=None)
-    iss: Optional[Any] = field(default=None)
-    nbf: Optional[Any] = field(default=None)
-    neb_sid: Optional[Any] = field(default=None)
-    session_expiry: Optional[Any] = field(default=None)
-    transaction_id: Optional[Any] = field(default=None)
-    sub: Optional[int] = field(default=None)
-    acr: Optional[Any] = field(default=None)
-    loa: Optional[Any] = field(default=None)
-    idp_environment: Optional[Any] = field(default=None)
-
-
-@dataclass
-class UserInfoToken:
-    """
-    OpenID Connect UserInfo token
-    """
-    acr: Optional[Any] = field(default=None)
-    amr: Optional[Any] = field(default=None)
-    aud: Optional[Any] = field(default=None)
-    auth_time: Optional[Any] = field(default=None)
-    exp: Optional[int] = field(default=None)
-    iat: Optional[int] = field(default=None)
-    identity_type: Optional[Any] = field(default=None)
-    idp: Optional[Any] = field(default=None)
-    iss: Optional[Any] = field(default=None)
-    loa: Optional[Any] = field(default=None)
-    nbf: Optional[Any] = field(default=None)
-    sub: Optional[str] = field(default=None)
-    transaction_id: Optional[Any] = field(default=None)
-    mitid_age: Optional[Any] = field(dict_key='mitid.age', default=None)
-    mitid_date_of_birth: Optional[Any] = field(dict_key='mitid.date_of_birth', default=None)
-    mitid_identity_name: Optional[Any] = field(dict_key='mitid.identity_name', default=None)
-    mitid_uuid: Optional[Any] = field(dict_key='mitid.uuid', default=None)
-    cpr: Optional[str] = field(dict_key='dk.cpr', default=None)
-
-
-@dataclass
-class OpenIDConnectToken:
-    """
-    OpenID Connect ID token
-    """
-    expires_at: int
-    id_token: IdToken
-    id_token_raw: str
-    userinfo_token: Optional[UserInfoToken] = field(default=None)
-    scope: List[str] = field(default_factory=list)
-    access_token: Optional[str] = field(default=None)
-
-    @property
-    def issued(self) -> Optional[datetime]:
-        """
-        TODO
-        """
-        if self.id_token:
-            return datetime.fromtimestamp(self.id_token.iat, tz=timezone.utc)
-
-    @property
-    def expires(self) -> Optional[datetime]:
-        """
-        TODO
-        """
-        if self.id_token:
-            return datetime.fromtimestamp(self.id_token.exp, tz=timezone.utc)
-
-    @property
-    def subject(self) -> Optional[str]:
-        """
-        TODO
-        """
-        if self.id_token:
-            return self.id_token.sub
-
-    @property
-    def identity_provider(self) -> Optional[str]:
-        """
-        TODO
-        """
-        if self.id_token:
-            return self.id_token.idp
-
-    @property
-    def ssn(self) -> Optional[str]:
-        """
-        TODO
-        """
-        if self.userinfo_token:
-            return self.userinfo_token.cpr
+from .models import (
+    OpenIDConnectToken,
+    IdToken,
+    UserInfoToken,
+)
 
 
 # -- OpenID Connect ----------------------------------------------------------
@@ -152,11 +49,12 @@ class OAuth2Session(OAuth2Session_):
         """
         response = requests.post(
             url=OIDC_API_LOGOUT_URL,
-            json={'id_token': id_token}
+            json={'id_token': id_token},
         )
 
         if response.status_code != 200:
-            raise RuntimeError(f'Logout returned status {response.status_code}')
+            raise RuntimeError(
+                f'Logout returned status {response.status_code}')
 
 
 class SignaturgruppenBackend(object):
@@ -191,11 +89,8 @@ class SignaturgruppenBackend(object):
         :returns: Absolute URL @ Identity Provider
         """
         if validate_ssn:
-            # scope = ('openid', 'mitid', 'nemid', 'ssn', 'userinfo_token')
             scope = ('openid', 'mitid', 'nemid', 'ssn', 'userinfo_token')
-            # raise Exception('asd')
         else:
-            # scope = ('openid', 'mitid', 'nemid', 'ssn', 'ssn_store', 'userinfo_token')
             scope = ('openid', 'mitid', 'nemid')
 
         url, _ = self.session.create_authorization_url(
@@ -207,7 +102,12 @@ class SignaturgruppenBackend(object):
 
         return url
 
-    def fetch_token(self, code: str, state: str, redirect_uri: str) -> OpenIDConnectToken:
+    def fetch_token(
+            self,
+            code: str,
+            state: str,
+            redirect_uri: str,
+    ) -> OpenIDConnectToken:
         """
         TODO
         """

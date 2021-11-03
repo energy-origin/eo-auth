@@ -135,7 +135,7 @@ class OpenIDCallbackEndpoint(Endpoint):
                 state=request.state,
                 redirect_uri=self.url,
             )
-        except:
+        except Exception as e:
             # TODO Log this exception
             return self._redirect_to_failure(
                 state=state,

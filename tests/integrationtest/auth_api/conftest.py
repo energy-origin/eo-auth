@@ -25,18 +25,9 @@ from .keys import PRIVATE_KEY, PUBLIC_KEY
 @pytest.fixture(scope='function')
 def client() -> FlaskClient:
     """
-    TODO
+    Returns API test client.
     """
     return create_app().test_client
-
-
-# @pytest.fixture(scope='function')
-# def oauth2_session():
-#     """
-#     TODO
-#     """
-#     with patch('auth_api.oidc.signaturgruppen.oidc.session') as session:
-#         yield session
 
 
 # -- OAuth2 session methods --------------------------------------------------
@@ -45,7 +36,7 @@ def client() -> FlaskClient:
 @pytest.fixture(scope='function')
 def mock_get_jwk():
     """
-    TODO
+    Returns a mock of OAuth2Session.get_jwk() method.
     """
     with patch('auth_api.oidc.signaturgruppen.oidc.session.get_jwk') as get_jwk:
         yield get_jwk
@@ -54,7 +45,7 @@ def mock_get_jwk():
 @pytest.fixture(scope='function')
 def mock_fetch_token():
     """
-    TODO
+    Returns a mock of OAuth2Session.fetch_token() method.
     """
     with patch('auth_api.oidc.signaturgruppen.oidc.session.fetch_token') as fetch_token:
         yield fetch_token
@@ -63,7 +54,7 @@ def mock_fetch_token():
 @pytest.fixture(scope='function')
 def state_encoder() -> TokenEncoder[AuthState]:
     """
-    TODO
+    Returns AuthState encoder with correct secret embedded.
     """
     return TokenEncoder(
         schema=AuthState,
@@ -163,7 +154,7 @@ def id_token(
         token_expires: datetime,
 ) -> Dict[str, Any]:
     """
-    TODO
+    Mocked ID-token from Identity Provider (unencoded).
     """
     return {
         'iss': 'https://pp.netseidbroker.dk/op',
@@ -191,7 +182,7 @@ def id_token_encoded(
         id_token: Dict[str, Any],
 ) -> str:
     """
-    TODO
+    Mocked ID-token from Identity Provider (encoded).
     """
     token = jwt.encode(
         header={'alg': 'RS256'},
@@ -209,7 +200,7 @@ def userinfo_token(
         token_ssn: str,
 ) -> Dict[str, Any]:
     """
-    TODO
+    Mocked userinfo-token from Identity Provider (unencoded).
     """
     return {
         'iss': 'https://pp.netseidbroker.dk/op',
@@ -239,7 +230,7 @@ def userinfo_token_encoded(
         userinfo_token: Dict[str, Any],
 ) -> str:
     """
-    TODO
+    Mocked userinfo-token from Identity Provider (encoded).
     """
     token = jwt.encode(
         header={'alg': 'RS256'},
