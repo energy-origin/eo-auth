@@ -12,11 +12,10 @@ testcontainers = "*"
 pyjwt = "*"
 authlib = "*"
 requests = "*"
-peterplys = "0.4.4"
+python-decouple = "*"
+peterplys = "0.4.6"
 
 [scripts]
-revision = "alembic --config=src/migrations/alembic.ini revision --autogenerate"
-upgrade = "alembic --config=src/migrations/alembic.ini upgrade head"
 update-platform = "pip install --upgrade ./../ett-platform-utils"
 
 [requires]
