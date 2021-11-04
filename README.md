@@ -9,6 +9,9 @@ This domain is responsible for:
 - Translating opaque tokens to internal tokens (via a Træfik ForwardAuth endpoint)
 
 
+---
+
+
 # Content
 
 - Building and running the services
@@ -20,6 +23,92 @@ This domain is responsible for:
 - Architecture and implementation
 - Database and migrations
 
+
+---
+
+
+# Introduction
+
+TODO
+
+
+## Data models
+
+TODO
+
+
+---
+
+
+# System architecture
+
+TODO
+
+
+## Data models
+
+TODO
+
+
+## API endpoints
+
+TODO
+
+
+## Bus messages (in and out)
+
+TODO
+
+
+## Dependencies
+
+TODO
+
+
+---
+
+
+# Configuration
+
+The service(s) needs a number of configuration options for it to run.
+Options can be defined in either of the following ways (in prioritized order):
+
+- Environment variables
+- Defined in files `settings.ini` or `.env`
+- Command line arguments
+
+For example, if an option is defined as an environment variable, it will be
+used. Otherwise, the system looks towards the value in the `settings.ini` or
+`env.ini` (not both), and so on.
+
+When running the service locally for development and debugging, most of the
+necessary options are defined in `settings.ini`. The remaining (secret) options
+should be defined as environment variables, thus not committed to Git by accident.
+
+## Available options
+
+Name | Description | Example
+:--- | :--- | :--- |
+`DEBUG` | Whether or not to enable debugging mode (off by default) | `True`/`1` or `False`/`0`
+`SERVICE_URL` | Public URL to this service without trailing slash (defaults to `https://DEVELOP_HOST:DEVELOP_PORT`) | `https://project.com/api/auth`
+`DEVELOP_HOST` | Hostname used by development server (optional) | `127.0.0.1`
+`DEVELOP_PORT` | Port used by development server (optional) | `9096`
+**Tokens, Secrets, and Keys:** | |
+`TOKEN_COOKIE_DOMAIN` | The domain to set cookie on (Bearer token) | `project.com`
+`INTERNAL_TOKEN_SECRET` | Secret to sign and verify internal tokens | `something-secret`
+`SSN_ENCRYPTION_KEY` | Key en encrypt social security numbers | `also-something-secret`
+**SQL:** | |
+`SQL_URI` | Database connection string [compatible with SQLAlchemy](https://docs.sqlalchemy.org/en/14/core/engines.html) | `postgresql://scott:tiger@localhost/mydatabase`
+`SQL_POOL_SIZE` | Connection pool size per container | `10`
+**OpenID Connect:** | |
+`OIDC_CLIENT_ID` | OpenID Connect client ID | 
+`OIDC_CLIENT_SECRET` | OpenID Connect client secret | 
+`OIDC_AUTHORITY_URL` | OpenID Connect authority URL | 
+
+
+---
+
+
 # Installation and running locally (for development)
 
 The following sections describes how to install and run the project locally for development and debugging.
@@ -29,113 +118,107 @@ The following sections describes how to install and run the project locally for 
 
 - Python 3.8+
 - Pipenv
-- An SQL server with one database created in advance (PostgreSQL, MSSQL, MySQL, etc.)
+- An SQL server with one database created in advance (currently only supports PostgreSQL, but could support any SQL database with minor modification through SQLAlchemy)
 
 
-### First time installation
+## First time installation
 
 Make sure to upgrade your system packages for good measure:
-   
-    pip install --upgrade --user setuptools pip pipenv
 
-Then install project dependencies:
+    $ pip install --upgrade --user setuptools pip
 
-    pipenv update --dev
+Install Pipenv:
 
-Define necessary environment variables (listed below).
-You can define them in the .env file in the root of the project
-([more details on this here](https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env)).
+    $ pip install --upgrade --user pipenv
 
-    SERVICE_URL=http://127.0.0.1:9096
-    INTERNAL_TOKEN_SECRET=12345
-    SSN_ENCRYPTION_KEY=54321
-    TOKEN_COOKIE_DOMAIN=127.0.0.1
-    SQL_URI=postgresql://postgres:1234@localhost:5432/auth
-    SQL_POOL_SIZE=1
+Then install project dependencies (including dev-packages):
+
+    $ pipenv update --dev
+
+Define necessary options (described in a section above):
+
+    SQL_URI=<SQL connection string>
     OIDC_CLIENT_ID=<OpenID Connect Client ID>
     OIDC_CLIENT_SECRET=<OpenID Connect Client secret>
     OIDC_AUTHORITY_URL=<OpenID Connect authority URL>
 
 Navigate to the source directory:
 
-    cd src/
+    $ cd src/
 
 Apply database migrations:
 
-    pipenv run alembic --config=migrations/alembic.ini upgrade head
+    $ pipenv run alembic --config=migrations/alembic.ini upgrade head
 
-### Running API service locally (for development)
+## Run service(s) locally (for development)
 
 Start the local development server (NOT for production use):
 
-    pipenv run python -m auth_api
+    $ pipenv run python -m auth_api
 
-### Running tests
+## Run tests
 
 Run unit- and integration tests:
 
-    pipenv run python -m pytest ../tests/
+    $ pipenv run python -m pytest ../tests/
+
+## Run linting
+
+Run PEP8 linting:
+
+    $ pipenv run flake8
 
 
-# Environment variables
-
-Name | Description | Example
-:--- | :--- | :--- |
-`DEBUG` | Whether or not to enable debugging mode (off by default) | `True``True` or `False`
-`SERVICE_URL` | Public URL to this service without trailing slash | `https://project.com/api/auth`
-**Tokens, Secrets, and Keys:** | |
-`TOKEN_COOKIE_DOMAIN` | The domain to set cookie on (Bearer token) | `project.com`
-`INTERNAL_TOKEN_SECRET` | Secret to sign and verify internal tokens | `something-secret`
-`SSN_ENCRYPTION_KEY` | Key en encrypt social security numbers | `something-secret`
-**SQL:** | |
-`SQL_URI` | Database connection string for SQLAlchemy | `postgresql://scott:tiger@localhost/mydatabase`
-`SQL_POOL_SIZE` | Connection pool size per container | `10`
-**OpenID Connect:** | |
-`OIDC_CLIENT_ID` | OpenID Connect client ID | 
-`OIDC_CLIENT_SECRET` | OpenID Connect client secret | 
-`OIDC_AUTHORITY_URL` | OpenID Connect authority URL | 
+---
 
 
 # Building and running production-ready Docker image
 
-All microservices in a single domain are build into a single Docker image
-with multiple entrypoints.
+All microservices in a domain are build into a single Docker image with multiple entrypoints.
+Entrypoint scripts are located in the `src/` folder.
 
 ## Building Docker image
 
-    docker build -t auth:v1 .
+Start by locking dependencies (if necessary):
+
+    pipenv lock -r > requirements.txt
+
+Then build the Docker image:
+
+    docker build -t auth:XX .
 
 ## Running container images
 
 Web API:
 
-    docker run --entrypoint /app/entrypoint_api.sh auth:v1
+    docker run --entrypoint /app/entrypoint_api.sh auth:XX
 
 
-# System architecture
+---
 
-The following diagram depicts the overall architecture of AccountService and its dependencies. A few key points are listed below the diagram.
+# Updating dependencies (requirements.txt)
 
-![alt text](doc/AccountService.png)
+To add or remove Python package dependencies, first update the contents of Pipfile.
 
-- It exposes a web API using OAuth2 authentication.
-- It has one asynchronous worker running its own process (container).
-- The web API process starts asynchronous tasks by submitting them to a distributed queue using Redis.
-- A Beat process kicks off periodic tasks.
+To install all dependencies from Pipfile locally (for development and testing):
+
+    pipenv update --dev
+
+To lock production-only dependencies (for Docker containers):
+
+    pipenv lock -r > requirements.txt
 
 
-# 3rd party libraries
+---
 
-This project uses the following 3rd party libraries:
+# SQL Database
 
-- [Flask](https://flask.palletsprojects.com/en/1.1.x/): HTTP framework
-- [SQLAlchemy](https://www.sqlalchemy.org/): Database ORM
-- [Alembic](https://alembic.sqlalchemy.org/en/latest/): Database migrations and revisioning
-- [Marshmallow](https://marshmallow.readthedocs.io/en/stable/): JSON serialization/deserialization and validation
-- [Celery](https://docs.celeryproject.org/): Asynchronous tasks
-- [Redis](https://pypi.org/project/redis/): Celery backend + caching
-- [OpenCensus](https://github.com/census-instrumentation/opencensus-python): Logging and tracing
-- [Authlib](https://docs.authlib.org): OAuth2 implementation
-- [Origin-Ledger-SDK](https://pypi.org/project/Origin-Ledger-SDK/): Interface with the blockchain ledger
-- [bip32utils](https://github.com/lyndsysimon/bip32utils/): Generating block keys for the ledger
-- [pytest](https://docs.pytest.org/): Testing
+TODO
+
+## Connecting to database
+
+TODO
+
+## Managing database migrations
+
+TODO

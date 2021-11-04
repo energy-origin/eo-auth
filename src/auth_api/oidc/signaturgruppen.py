@@ -91,7 +91,7 @@ class SignaturgruppenBackend(object):
         if validate_ssn:
             scope = ('openid', 'mitid', 'nemid', 'ssn', 'userinfo_token')
         else:
-            scope = ('openid', 'mitid', 'nemid')
+            scope = ('openid', 'mitid', 'nemid', 'userinfo_token')
 
         url, _ = self.session.create_authorization_url(
             url=OIDC_LOGIN_URL,
