@@ -2,6 +2,7 @@ from typing import Optional, Any, Union
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
+from energytt_platform.serialize import Serializable
 from energytt_platform.tokens import TokenEncoder
 from energytt_platform.auth import TOKEN_COOKIE_NAME
 from energytt_platform.tools import append_query_parameters
@@ -25,9 +26,44 @@ from auth_api.config import (
     OIDC_SSN_VALIDATE_CALLBACK_URL,
 )
 
-from .errors import ERROR_CODES
-from .models import AuthState, OidcCallbackParams
-from .signaturgruppen import oidc, OpenIDConnectToken
+from auth_api.oidc import (
+    oidc_backend,
+    OpenIDConnectToken,
+    OIDC_ERROR_CODES,
+)
+
+
+# -- Models ------------------------------------------------------------------
+
+
+@dataclass
+class AuthState(Serializable):
+    """
+    AuthState is an intermediate token generated when the user requests
+    an authorization URL. It encodes to a [JWT] string.
+    The token is included in the authorization URL, and is returned by the
+    OIDC Identity Provider when the client is redirected back.
+    It provides a way to keep this service stateless.
+    """
+    return_url: str
+    created: datetime = field(
+        default_factory=lambda: datetime.now(tz=timezone.utc))
+
+
+@dataclass
+class OidcCallbackParams:
+    """
+    Parameters provided by the Identity Provider when redirecting
+    clients back to callback endpoints.
+    TODO Describe each field separately
+    """
+    state: Optional[str] = field(default=None)
+    iss: Optional[str] = field(default=None)
+    code: Optional[str] = field(default=None)
+    scope: Optional[str] = field(default=None)
+    error: Optional[str] = field(default=None)
+    error_hint: Optional[str] = field(default=None)
+    error_description: Optional[str] = field(default=None)
 
 
 # -- Encoders ----------------------------------------------------------------
@@ -70,7 +106,7 @@ class OpenIdLogin(Endpoint):
             return_url=request.return_url,
         )
 
-        url = oidc.create_authorization_url(
+        url = oidc_backend.create_authorization_url(
             state=state_encoder.encode(state),
             callback_uri=OIDC_LOGIN_CALLBACK_URL,
             validate_ssn=False,
@@ -130,7 +166,7 @@ class OpenIDCallbackEndpoint(Endpoint):
 
         # Fetch token from Identity Provider
         try:
-            token = oidc.fetch_token(
+            token = oidc_backend.fetch_token(
                 code=request.code,
                 state=request.state,
                 redirect_uri=self.url,
@@ -146,7 +182,7 @@ class OpenIDCallbackEndpoint(Endpoint):
         user = db_controller.get_user_by_external_subject(
             session=session,
             external_subject=token.subject,
-            identity_provider=token.identity_provider,
+            identity_provider=token.provider,
         )
 
         return self.on_oidc_flow_succeeded(
@@ -198,7 +234,7 @@ class OpenIDCallbackEndpoint(Endpoint):
             expires=token.expires,
             subject=user.subject,
             scope=TOKEN_DEFAULT_SCOPES,
-            id_token=token.id_token_raw,
+            id_token=token.id_token,
         )
 
         # -- Response --------------------------------------------------------
@@ -274,7 +310,7 @@ class OpenIDCallbackEndpoint(Endpoint):
         query = {
             'success': '0',
             'error_code': error_code,
-            'error': ERROR_CODES[error_code],
+            'error': OIDC_ERROR_CODES[error_code],
         }
 
         # Append (or override) query parameters to the return_url provided
@@ -326,7 +362,7 @@ class OpenIDLoginCallback(OpenIDCallbackEndpoint):
             # This flow results in a callback to the OpenIDSsnCallback
             # endpoint (below).
             return TemporaryRedirect(
-                url=oidc.create_authorization_url(
+                url=oidc_backend.create_authorization_url(
                     state=state_encoder.encode(state),
                     callback_uri=OIDC_SSN_VALIDATE_CALLBACK_URL,
                     validate_ssn=True,
@@ -379,7 +415,7 @@ class OpenIDSsnCallback(OpenIDCallbackEndpoint):
             db_controller.attach_external_user(
                 session=session,
                 user=user,
-                identity_provider=token.identity_provider,
+                identity_provider=token.provider,
                 external_subject=token.subject,
             )
 
@@ -417,7 +453,7 @@ class OpenIdLogout(Endpoint):
 
         if token is not None:
             session.delete(token)
-            oidc.logout(token.id_token)
+            oidc_backend.logout(token.id_token)
 
         cookie = Cookie(
             name=TOKEN_COOKIE_NAME,

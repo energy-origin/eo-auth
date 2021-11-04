@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from energytt_platform.tokens import TokenEncoder
 
 from auth_api.db import db
-from auth_api.oidc import AuthState
+from auth_api.endpoints import AuthState
 from auth_api.models import DbUser, DbExternalUser
 
 

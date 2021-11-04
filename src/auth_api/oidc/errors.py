@@ -2,7 +2,7 @@
 # Errors from Identity Provider translates into these errors codes
 # as an internal abstraction over OpenID Connect errors.
 
-ERROR_CODES = {
+OIDC_ERROR_CODES = {
 
     'E0': 'Unknown error from Identity Provider',
     'E1': 'User interrupted',

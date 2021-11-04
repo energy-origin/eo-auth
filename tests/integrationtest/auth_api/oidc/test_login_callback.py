@@ -9,7 +9,7 @@ from energytt_platform.api.testing import (
 )
 
 from auth_api.db import db
-from auth_api.oidc import AuthState
+from auth_api.endpoints import AuthState
 from auth_api.config import (
     OIDC_LOGIN_CALLBACK_PATH,
     OIDC_LOGIN_URL,

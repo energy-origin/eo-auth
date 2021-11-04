@@ -13,7 +13,7 @@ from datetime import datetime, timezone, timedelta
 from energytt_platform.tokens import TokenEncoder
 
 from auth_api.app import create_app
-from auth_api.oidc import AuthState
+from auth_api.endpoints import AuthState
 from auth_api.config import INTERNAL_TOKEN_SECRET
 
 from .keys import PRIVATE_KEY, PUBLIC_KEY

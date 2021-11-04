@@ -8,14 +8,13 @@ from .config import (
     OIDC_SSN_VALIDATE_CALLBACK_URL,
 )
 
-from .oidc import (
+from .endpoints import (
+    # OpenID Connect:
     OpenIdLogin,
     OpenIDLoginCallback,
     OpenIDSsnCallback,
     OpenIdLogout,
-)
-
-from .tokens import (
+    # Tokens:
     ForwardAuth,
     InspectToken,
     CreateTestToken,
@@ -38,7 +37,7 @@ def create_app() -> Application:
     # Login
     app.add_endpoint(
         method='GET',
-        path='/oidc/login',
+        path='/login',
         endpoint=OpenIdLogin(),
     )
 
@@ -60,7 +59,7 @@ def create_app() -> Application:
 
     app.add_endpoint(
         method='GET',
-        path='/oidc/logout',
+        path='/logout',
         endpoint=OpenIdLogout(),
         guards=[TokenGuard()]
     )

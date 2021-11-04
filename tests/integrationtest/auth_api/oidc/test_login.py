@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from energytt_platform.tokens import TokenEncoder
 
-from auth_api.oidc import AuthState
+from auth_api.endpoints import AuthState
 
 
 # -- Helpers -----------------------------------------------------------------

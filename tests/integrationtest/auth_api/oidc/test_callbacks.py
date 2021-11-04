@@ -21,7 +21,7 @@ from energytt_platform.api.testing import (
 )
 
 from auth_api.db import db
-from auth_api.oidc import AuthState
+from auth_api.endpoints import AuthState
 from auth_api.queries import LoginRecordQuery
 from auth_api.config import (
     TOKEN_COOKIE_DOMAIN,

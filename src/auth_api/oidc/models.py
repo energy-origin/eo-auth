@@ -1,155 +1,97 @@
-from serpyco import field
+from datetime import datetime
+from abc import abstractmethod
+from typing import Optional, List
 from dataclasses import dataclass
-from typing import Optional, Any, List
-from datetime import datetime, timezone
-
-from energytt_platform.serialize import Serializable
-
-
-@dataclass
-class AuthState(Serializable):
-    """
-    AuthState is an intermediate token generated when the user requests
-    an authorization URL. It encodes to a [JWT] string.
-
-    The token is included in the authorization URL, and is returned by the
-    OIDC Identity Provider when the client is redirected back.
-
-    It provides a way to keep this service stateless.
-    """
-    return_url: str
-    created: datetime = field(
-        default_factory=lambda: datetime.now(tz=timezone.utc))
-
-
-@dataclass
-class OidcCallbackParams:
-    """
-    Parameters provided by the Identity Provider when redirecting
-    clients back to callback endpoints.
-
-    TODO Describe each field separately
-    """
-    state: Optional[str] = field(default=None)
-    iss: Optional[str] = field(default=None)
-    code: Optional[str] = field(default=None)
-    scope: Optional[str] = field(default=None)
-    error: Optional[str] = field(default=None)
-    error_hint: Optional[str] = field(default=None)
-    error_description: Optional[str] = field(default=None)
-
-
-@dataclass
-class IdToken:
-    """
-    OpenID Connect ID token
-    """
-    amr: Optional[Any] = field(default=None)
-    at_hash: Optional[Any] = field(default=None)
-    aud: Optional[Any] = field(default=None)
-    auth_time: Optional[Any] = field(default=None)
-    exp: Optional[int] = field(default=None)
-    iat: Optional[int] = field(default=None)
-    identity_type: Optional[Any] = field(default=None)
-    idp: Optional[Any] = field(default=None)
-    iss: Optional[Any] = field(default=None)
-    nbf: Optional[Any] = field(default=None)
-    neb_sid: Optional[Any] = field(default=None)
-    session_expiry: Optional[Any] = field(default=None)
-    transaction_id: Optional[Any] = field(default=None)
-    sub: Optional[int] = field(default=None)
-    acr: Optional[Any] = field(default=None)
-    loa: Optional[Any] = field(default=None)
-    idp_environment: Optional[Any] = field(default=None)
-
-
-@dataclass
-class UserInfoToken:
-    """
-    OpenID Connect UserInfo token
-    """
-    acr: Optional[Any] = field(default=None)
-    amr: Optional[Any] = field(default=None)
-    aud: Optional[Any] = field(default=None)
-    auth_time: Optional[Any] = field(default=None)
-    exp: Optional[int] = field(default=None)
-    iat: Optional[int] = field(default=None)
-    identity_type: Optional[Any] = field(default=None)
-    idp: Optional[Any] = field(default=None)
-    iss: Optional[Any] = field(default=None)
-    loa: Optional[Any] = field(default=None)
-    nbf: Optional[Any] = field(default=None)
-    sub: Optional[str] = field(default=None)
-    transaction_id: Optional[Any] = field(default=None)
-    mitid_age: Optional[Any] = field(dict_key='mitid.age', default=None)
-    mitid_date_of_birth: Optional[Any] = field(dict_key='mitid.date_of_birth', default=None)
-    mitid_identity_name: Optional[Any] = field(dict_key='mitid.identity_name', default=None)
-    mitid_uuid: Optional[Any] = field(dict_key='mitid.uuid', default=None)
-    cpr: Optional[str] = field(dict_key='dk.cpr', default=None)
 
 
 @dataclass
 class OpenIDConnectToken:
     """
-    OpenID Connect ID token
+    Abstracts away lower-level structure of OpenID Connect ID tokens
+    under a single interface to make it easy to switch OpenID Connect
+    backends without it having any effect on clients depending on it.
     """
-    expires_at: int
-    id_token: IdToken
-    id_token_raw: str
-    userinfo_token: Optional[UserInfoToken] = field(default=None)
-    scope: List[str] = field(default_factory=list)
-    access_token: Optional[str] = field(default=None)
 
     @property
-    def issued(self) -> Optional[datetime]:
+    @abstractmethod
+    def issued(self) -> datetime:
         """
         TODO
         """
-        if self.id_token:
-            return datetime.fromtimestamp(self.id_token.iat, tz=timezone.utc)
+        raise NotImplementedError
 
     @property
-    def expires(self) -> Optional[datetime]:
+    @abstractmethod
+    def expires(self) -> datetime:
         """
-        TODO
+        Time of expiration.
         """
-        if self.id_token:
-            return datetime.fromtimestamp(self.id_token.exp, tz=timezone.utc)
+        raise NotImplementedError
 
     @property
-    def subject(self) -> Optional[str]:
+    @abstractmethod
+    def subject(self) -> str:
         """
-        TODO
+        User unique subject (ID) for this provider.
         """
-        if self.id_token:
-            return self.id_token.sub
+        raise NotImplementedError
 
     @property
-    def identity_provider(self) -> Optional[str]:
+    @abstractmethod
+    def provider(self) -> str:
         """
-        TODO
+        Name of identity provider (ie. 'mitid' or 'nemid' etc).
         """
-        if self.id_token:
-            return self.id_token.idp
+        raise NotImplementedError
 
     @property
-    def ssn(self) -> Optional[str]:
+    @abstractmethod
+    def scope(self) -> List[str]:
         """
-        TODO
+        Scopes granted in this token.
         """
-        if self.userinfo_token:
-            return self.userinfo_token.cpr
+        raise NotImplementedError
 
     @property
+    @abstractmethod
+    def id_token(self) -> str:
+        """
+        id_token encoded (raw).
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def is_private(self) -> bool:
         """
-        TODO
+        Whether or not this is a privat person.
         """
-        return True
+        raise NotImplementedError
 
     @property
+    @abstractmethod
     def is_company(self) -> bool:
         """
-        TODO
+        Whether or not this is a company.
         """
-        return True
+        raise NotImplementedError
+
+    # -- For private persons only --------------------------------------------
+
+    @property
+    @abstractmethod
+    def ssn(self) -> Optional[str]:
+        """
+        Social security number (for private persons).
+        """
+        raise NotImplementedError
+
+    # -- For companies only --------------------------------------------------
+
+    @property
+    @abstractmethod
+    def tin(self) -> Optional[str]:
+        """
+        Tax identification number (for companies).
+        """
+        raise NotImplementedError
