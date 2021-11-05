@@ -7,10 +7,10 @@ from decouple import config
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # Service port (when running development server)
-DEVELOP_HOST = config('DEBUG_HOST', default='127.0.0.1')
+DEVELOP_HOST = config('DEVELOP_HOST', default='127.0.0.1')
 
 # Service port (when running development server)
-DEVELOP_PORT = config('DEBUG_PORT', default=9096, cast=int)
+DEVELOP_PORT = config('DEVELOP_PORT', default=9096, cast=int)
 
 # Service absolute URL (when running development server)
 DEVELOP_URL = f'http://{DEVELOP_HOST}:{DEVELOP_PORT}'

@@ -47,7 +47,7 @@ class SignaturgruppenToken(OpenIDConnectToken, Dict[str, Any]):
 
     @property
     def scope(self) -> List[str]:
-        return [s for s in self['scope'].split(' ') if s]
+        return [s for s in self['scope'].split(' ') if s.strip()]
 
     @property
     def id_token(self) -> str:
@@ -67,4 +67,4 @@ class SignaturgruppenToken(OpenIDConnectToken, Dict[str, Any]):
 
     @property
     def tin(self) -> Optional[str]:
-        pass
+        return self['userinfo_token'].get('nemid.cvr')

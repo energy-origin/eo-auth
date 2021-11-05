@@ -80,16 +80,13 @@ state_encoder = TokenEncoder(
 
 class OpenIdLogin(Endpoint):
     """
-    Creates a URL which initiates a login flow @ the OpenID Connect
-    Identity Provider. If the 'redirect' parameter is provided,
-    the endpoint 307 redirects the client, otherwise it returns the
-    URL as JSON body.
+    Returns a URL which initiates a login flow @ the
+    OpenID Connect Identity Provider.
     """
 
     @dataclass
     class Request:
         return_url: str
-        redirect: Optional[str] = field(default=None)
 
     @dataclass
     class Response:
@@ -112,10 +109,7 @@ class OpenIdLogin(Endpoint):
             validate_ssn=False,
         )
 
-        if request.redirect:
-            return TemporaryRedirect(url=url)
-        else:
-            return self.Response(url=url)
+        return self.Response(url=url)
 
 
 # -- Login Callback Endpoints ------------------------------------------------
