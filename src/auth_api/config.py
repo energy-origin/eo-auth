@@ -52,12 +52,12 @@ SQL_POOL_SIZE = config('SQL_POOL_SIZE', default=1, cast=int)
 # -- URLs --------------------------------------------------------------------
 
 # Callback URL after OpenID Connect authentication flow
-OIDC_LOGIN_CALLBACK_PATH = '/login/callback'
+OIDC_LOGIN_CALLBACK_PATH = '/oidc/login/callback'
 OIDC_LOGIN_CALLBACK_URL = \
     f'{SERVICE_URL}{OIDC_LOGIN_CALLBACK_PATH}'
 
 # Callback URL after OpenID Connect SSN validation flow
-OIDC_SSN_VALIDATE_CALLBACK_PATH = '/login/callback/ssn'
+OIDC_SSN_VALIDATE_CALLBACK_PATH = '/oidc/login/callback/ssn'
 OIDC_SSN_VALIDATE_CALLBACK_URL = \
     f'{SERVICE_URL}{OIDC_SSN_VALIDATE_CALLBACK_PATH}'
 

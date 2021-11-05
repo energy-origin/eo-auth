@@ -20,8 +20,6 @@ session = OAuth2Session(
     api_logout_url=OIDC_API_LOGOUT_URL,
     client_id=OIDC_CLIENT_ID,
     client_secret=OIDC_CLIENT_SECRET,
-    authorization_endpoint=OIDC_LOGIN_URL,
-    token_endpoint=OIDC_TOKEN_URL,
 )
 
 
@@ -29,4 +27,6 @@ session = OAuth2Session(
 # Makes it easy to switch implementation without effects anywhere else.
 oidc_backend = SignaturgruppenBackend(
     session=session,
+    authorization_endpoint=OIDC_LOGIN_URL,
+    token_endpoint=OIDC_TOKEN_URL,
 )

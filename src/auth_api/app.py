@@ -37,7 +37,7 @@ def create_app() -> Application:
     # Login
     app.add_endpoint(
         method='GET',
-        path='/login',
+        path='/oidc/login',
         endpoint=OpenIdLogin(),
     )
 

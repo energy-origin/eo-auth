@@ -9,6 +9,20 @@ class SignaturgruppenBackend(OpenIDConnectBackend):
     """
     TODO
     """
+    def __init__(
+            self,
+            *args,
+            authorization_endpoint: str,
+            token_endpoint: str,
+            **kwargs,
+    ):
+        """
+        TODO
+        """
+        self.authorization_endpoint = authorization_endpoint
+        self.token_endpoint = token_endpoint
+        super(SignaturgruppenBackend, self).__init__(*args, **kwargs)
+
     def create_authorization_url(
             self,
             state: str,
@@ -32,6 +46,7 @@ class SignaturgruppenBackend(OpenIDConnectBackend):
             scope.append('ssn')
 
         url, _ = self.session.create_authorization_url(
+            url=self.authorization_endpoint,
             redirect_uri=callback_uri,
             state=state,
             scope=scope,
@@ -49,6 +64,7 @@ class SignaturgruppenBackend(OpenIDConnectBackend):
         TODO
         """
         raw_token = self.session.fetch_token(
+            url=self.token_endpoint,
             grant_type='authorization_code',
             code=code,
             state=state,

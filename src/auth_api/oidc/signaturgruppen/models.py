@@ -16,34 +16,36 @@ class SignaturgruppenToken(OpenIDConnectToken, Dict[str, Any]):
         """
         TODO
         """
-        token = cls(raw_token)
+        token = cls()
+        token.update(raw_token)
 
-        # Decode id_token and override encoded value
-        token['id_token_encoded'] = token['id_token']
-        token['id_token'] = jwt.decode(token['id_token'], key=jwk)
+        # Decode id_token
+        token['id_token_decoded'] = \
+            jwt.decode(token['id_token'], key=jwk)
 
-        # Decode userinfo_token and override encoded value
-        token['userinfo_token'] = jwt.decode(token['userinfo_token'], key=jwk)
+        # Decode userinfo_token
+        token['userinfo_token_decoded'] = \
+            jwt.decode(token['userinfo_token'], key=jwk)
 
         return token
 
     @property
     def issued(self) -> datetime:
         return datetime.fromtimestamp(
-            self['id_token']['iat'], tz=timezone.utc)
+            self['id_token_decoded']['iat'], tz=timezone.utc)
 
     @property
     def expires(self) -> datetime:
         return datetime.fromtimestamp(
-            self['id_token']['exp'], tz=timezone.utc)
+            self['id_token_decoded']['exp'], tz=timezone.utc)
 
     @property
     def subject(self) -> str:
-        return self['id_token']['sub']
+        return self['id_token_decoded']['sub']
 
     @property
     def provider(self) -> str:
-        return self['id_token']['idp']
+        return self['id_token_decoded']['idp']
 
     @property
     def scope(self) -> List[str]:
@@ -51,20 +53,20 @@ class SignaturgruppenToken(OpenIDConnectToken, Dict[str, Any]):
 
     @property
     def id_token(self) -> str:
-        return self['id_token_encoded']
+        return self['id_token']
 
     @property
     def is_private(self) -> bool:
-        return self['userinfo_token']['identity_type'] == 'private'
+        return self['userinfo_token_decoded']['identity_type'] == 'private'
 
     @property
     def is_company(self) -> bool:
-        return self['userinfo_token']['identity_type'] == 'professional'
+        return self['userinfo_token_decoded']['identity_type'] == 'professional'  # noqa: E501
 
     @property
     def ssn(self) -> Optional[str]:
-        return self['userinfo_token'].get('dk.cpr')
+        return self['userinfo_token_decoded'].get('dk.cpr')
 
     @property
     def tin(self) -> Optional[str]:
-        return self['userinfo_token'].get('nemid.cvr')
+        return self['userinfo_token_decoded'].get('nemid.cvr')
