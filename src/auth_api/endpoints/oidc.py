@@ -355,13 +355,16 @@ class OpenIDLoginCallback(OpenIDCallbackEndpoint):
             # time requesting the user's social security number.
             # This flow results in a callback to the OpenIDSsnCallback
             # endpoint (below).
-            return TemporaryRedirect(
-                url=oidc_backend.create_authorization_url(
-                    state=state_encoder.encode(state),
-                    callback_uri=OIDC_SSN_VALIDATE_CALLBACK_URL,
-                    validate_ssn=True,
-                ),
-            )
+            if token.is_private:
+                return TemporaryRedirect(
+                    url=oidc_backend.create_authorization_url(
+                        state=state_encoder.encode(state),
+                        callback_uri=OIDC_SSN_VALIDATE_CALLBACK_URL,
+                        validate_ssn=True,
+                    ),
+                )
+            elif token.is_company:
+                pass
 
         return super(OpenIDLoginCallback, self).on_oidc_flow_succeeded(
             session=session,
