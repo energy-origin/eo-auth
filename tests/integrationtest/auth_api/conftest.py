@@ -38,7 +38,7 @@ def mock_get_jwk():
     """
     Returns a mock of OAuth2Session.get_jwk() method.
     """
-    with patch('auth_api.oidc.signaturgruppen.oidc.session.get_jwk') as get_jwk:
+    with patch('auth_api.oidc.session.get_jwk') as get_jwk:
         yield get_jwk
 
 
@@ -47,7 +47,7 @@ def mock_fetch_token():
     """
     Returns a mock of OAuth2Session.fetch_token() method.
     """
-    with patch('auth_api.oidc.signaturgruppen.oidc.session.fetch_token') as fetch_token:
+    with patch('auth_api.oidc.session.fetch_token') as fetch_token:
         yield fetch_token
 
 

@@ -167,7 +167,6 @@ class OpenIDCallbackEndpoint(Endpoint):
             )
         except Exception as e:
             # TODO Log this exception
-            raise
             return self._redirect_to_failure(
                 state=state,
                 error_code='E505',

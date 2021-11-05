@@ -97,5 +97,5 @@ class TestOidcLoginCallbackSubjectUnknown:
         assert_query_parameter(
             url=redirect_location,
             name='scope',
-            value='openid mitid nemid ssn userinfo_token',
+            value='openid mitid nemid userinfo_token ssn',
         )

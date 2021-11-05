@@ -39,7 +39,7 @@ class TestOidcLogin:
     Tests specifically for OIDC login endpoint.
     """
 
-    def test__without_redirect__should_return_auth_url_as_json_with_correct_state(
+    def test__should_return_auth_url_as_json_with_correct_state(
             self,
             client: FlaskClient,
             state_encoder: TokenEncoder[AuthState],
@@ -66,36 +66,6 @@ class TestOidcLogin:
         )
 
         assert r.status_code == 200
-        assert actual_state.return_url == 'http://foobar.com/'
-
-    def test__with_redirect__should_return_auth_url_as_json_with_correct_state(
-            self,
-            client: FlaskClient,
-            state_encoder: TokenEncoder[AuthState],
-    ):
-        """
-        Including the 'redirect' parameter should result in the endpoint
-        returning the auth URL as part of a HTTP redirect.
-        """
-
-        # -- Act -------------------------------------------------------------
-
-        r = client.get(
-            path='/oidc/login',
-            query_string={
-                'return_url': 'http://foobar.com/',
-                'redirect': '1',
-            },
-        )
-
-        # -- Assert ----------------------------------------------------------
-
-        actual_state = get_auth_state_from_redirect_url(
-            auth_url=r.headers['Location'],
-            state_encoder=state_encoder,
-        )
-
-        assert r.status_code == 307
         assert actual_state.return_url == 'http://foobar.com/'
 
     def test__omit_parameter_return_url__should_return_status_400(
