@@ -35,10 +35,7 @@ ett-base-helm-chart:
 #      host: "172.17.0.1"
 
   ingress:
-    hosts:
-      - 172.18.0.19
-      - localhost
-      - dev2.eloprindelse.dk
+    hosts: []
     paths:
       - /auth
     servicePort: 80
