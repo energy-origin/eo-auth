@@ -1,11 +1,11 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: ett-auth-service
+  name: po-auth-service
   labels:
-    {{- include "ett-auth.labels" . | nindent 4 }}
+    {{- include "po-auth.labels" . | nindent 4 }}
 spec:
   forwardAuth:
-    address: http://{{ include "ett-auth.fullname" . }}.ett.svc.cluster.local/auth
+    address: http://{{ include "po-auth.fullname" . }}.po.svc.cluster.local/auth
     authResponseHeaders:
       - Authorization

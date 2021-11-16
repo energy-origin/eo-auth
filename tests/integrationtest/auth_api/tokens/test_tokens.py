@@ -1,9 +1,9 @@
 import pytest
-from energytt_platform.auth import TOKEN_COOKIE_NAME
+from origin_platform.auth import TOKEN_COOKIE_NAME
 from flask.testing import FlaskClient
 from datetime import datetime, timedelta, timezone
 
-from energytt_platform.sql import SqlEngine
+from origin_platform.sql import SqlEngine
 
 from auth_api.models import DbToken
 

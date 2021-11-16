@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import patch
 from testcontainers.postgres import PostgresContainer
 
-from energytt_platform.sql import SqlEngine, POSTGRES_VERSION
+from origin_platform.sql import SqlEngine, POSTGRES_VERSION
 
 from auth_api.db import db as _db
 

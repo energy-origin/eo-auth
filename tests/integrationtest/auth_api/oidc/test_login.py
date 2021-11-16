@@ -4,7 +4,7 @@ Tests specifically for OIDC login endpoint.
 from flask.testing import FlaskClient
 from urllib.parse import parse_qs, urlsplit
 
-from energytt_platform.tokens import TokenEncoder
+from origin_platform.tokens import TokenEncoder
 
 from auth_api.endpoints import AuthState
 

@@ -16,7 +16,7 @@ python-decouple = "*"
 peterplys = "0.4.6"
 
 [scripts]
-update-platform = "pip install --upgrade ./../ett-platform-utils"
+update-platform = "pip install --upgrade ./../po-platform-utils"
 
 [requires]
 python_version = "3.8"

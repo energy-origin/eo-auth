@@ -12,9 +12,9 @@ from unittest.mock import MagicMock
 from flask.testing import FlaskClient
 from datetime import datetime, timezone
 
-from energytt_platform.tokens import TokenEncoder
-from energytt_platform.auth import TOKEN_COOKIE_NAME, TOKEN_HEADER_NAME
-from energytt_platform.api.testing import (
+from origin_platform.tokens import TokenEncoder
+from origin_platform.auth import TOKEN_COOKIE_NAME, TOKEN_HEADER_NAME
+from origin_platform.api.testing import (
     CookieTester,
     assert_base_url,
     assert_query_parameter,

@@ -2,11 +2,11 @@ from typing import Optional, Any, Union
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
-from energytt_platform.serialize import Serializable
-from energytt_platform.tokens import TokenEncoder
-from energytt_platform.auth import TOKEN_COOKIE_NAME
-from energytt_platform.tools import append_query_parameters
-from energytt_platform.api import (
+from origin_platform.serialize import Serializable
+from origin_platform.tokens import TokenEncoder
+from origin_platform.auth import TOKEN_COOKIE_NAME
+from origin_platform.tools import append_query_parameters
+from origin_platform.api import (
     Endpoint,
     Context,
     HttpResponse,

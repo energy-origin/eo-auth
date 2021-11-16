@@ -1,4 +1,4 @@
-from energytt_platform.sql import SqlEngine
+from origin_platform.sql import SqlEngine
 
 from .config import SQL_URI, SQL_POOL_SIZE
 

@@ -2,8 +2,8 @@ from typing import Dict, Any
 from unittest.mock import MagicMock
 from flask.testing import FlaskClient
 
-from energytt_platform.tokens import TokenEncoder
-from energytt_platform.api.testing import (
+from origin_platform.tokens import TokenEncoder
+from origin_platform.api.testing import (
     assert_base_url,
     assert_query_parameter,
 )
