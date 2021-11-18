@@ -1,6 +1,6 @@
 # Auth
 
-This is the repository for the Auth-domain - a part of [Project Energy Track and Trace](https://github.com/Energy-Track-and-Trace).
+This is the repository for the Auth-domain - a part of [Energy Origin](https://github.com/Energinet-DataHub/energy-origin).
 
 This domain is responsible for:
 
@@ -160,7 +160,15 @@ Start the local development server (NOT for production use):
 
 Run unit- and integration tests:
 
-    $ pipenv run python -m pytest ../tests/
+    $ pipenv run testall
+
+Run unit tests
+
+    $ pipenv run unittest
+
+Run integration tests
+
+    $ pipenv run integrationtest
 
 ## Run linting
 

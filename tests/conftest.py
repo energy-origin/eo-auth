@@ -22,9 +22,7 @@ from origin.sql import SqlEngine, POSTGRES_VERSION
 from auth_api.db import db as _db
 
 
-
 # # -- SQL ---------------------------------------------------------------------
-
 
 
 @pytest.fixture(scope='function')

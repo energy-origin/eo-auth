@@ -140,6 +140,7 @@ class OAuth2Session(OAuth2Session_):
     """
     TODO
     """
+
     def get_jwk(self) -> str:
         """
         TODO Cache result in a period

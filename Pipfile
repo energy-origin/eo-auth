@@ -7,6 +7,7 @@ verify_ssl = true
 pytest = "*"
 pytest-cov = "*"
 testcontainers = "*"
+flake8 = "*"
 
 [packages]
 pyjwt = "*"
@@ -16,10 +17,11 @@ python-decouple = "*"
 origin-platform-utils = "0.5.0"
 
 [scripts]
-update-platform = "pip install --upgrade ./../eo-platform-utils"
+lint-flake8 = "flake8"
 testall= "pytest tests"
 unittest= "pytest tests -m unittest --tb=native"
 integrationtest= "pytest tests -m integrationtest --tb=native"
+update-platform = "pip install --upgrade ./../eo-platform-utils"
 
 [requires]
 python_version = "3.8"

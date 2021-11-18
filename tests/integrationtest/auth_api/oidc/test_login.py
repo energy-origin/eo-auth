@@ -1,7 +1,7 @@
 """
 Tests specifically for OIDC login endpoint.
 """
-import pytest 
+import pytest
 
 from flask.testing import FlaskClient
 from urllib.parse import parse_qs, urlsplit
