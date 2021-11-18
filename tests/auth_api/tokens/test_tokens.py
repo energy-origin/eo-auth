@@ -1,9 +1,9 @@
 import pytest
-from energytt_platform.auth import TOKEN_COOKIE_NAME
+from origin.auth import TOKEN_COOKIE_NAME
 from flask.testing import FlaskClient
 from datetime import datetime, timedelta, timezone
 
-from energytt_platform.sql import SqlEngine
+from origin.sql import SqlEngine
 
 from auth_api.models import DbToken
 
@@ -13,6 +13,7 @@ class TestForwardAuth:
     TODO
     """
 
+    @pytest.mark.integrationtest
     def test__no_token__should_return_no_header_and_status_401(
             self,
             client: FlaskClient,
@@ -31,6 +32,7 @@ class TestForwardAuth:
         assert r.status_code == 401
         assert 'Authorization' not in r.headers
 
+    @pytest.mark.integrationtest
     def test__invalid_token__should_return_no_header_and_status_401(
             self,
             client: FlaskClient,
@@ -67,6 +69,7 @@ class TestForwardAuth:
             datetime.now(tz=timezone.utc) - timedelta(days=1),
         ),
     ])
+    @pytest.mark.integrationtest
     def test__token_issue_or_expire_not_valid_right_now__should_return_no_header_and_status_401(
             self,
             issued: datetime,
@@ -107,6 +110,7 @@ class TestForwardAuth:
         assert r.status_code == 401
         assert 'Authorization' not in r.headers
 
+    @pytest.mark.integrationtest
     def test__token_exists__should_return_authorization_header_and_status_200(
             self,
             client: FlaskClient,

@@ -1,6 +1,6 @@
 from sqlalchemy import orm, func, and_
 
-from energytt_platform.sql import SqlQuery
+from origin.sql import SqlQuery
 
 from .models import DbUser, DbExternalUser, DbToken, DbLoginRecord
 

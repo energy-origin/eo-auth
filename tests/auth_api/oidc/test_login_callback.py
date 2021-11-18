@@ -1,9 +1,11 @@
+import pytest
+
 from typing import Dict, Any
 from unittest.mock import MagicMock
 from flask.testing import FlaskClient
 
-from energytt_platform.tokens import TokenEncoder
-from energytt_platform.api.testing import (
+from origin.tokens import TokenEncoder
+from origin.api.testing import (
     assert_base_url,
     assert_query_parameter,
 )
@@ -24,6 +26,7 @@ class TestOidcLoginCallbackSubjectUnknown:
     Provider's subject is unknown to the system.
     """
 
+    @pytest.mark.integrationtest
     def test__user_does_not_exist__should_redirect_to_verify_ssn(
             self,
             client: FlaskClient,
@@ -43,7 +46,8 @@ class TestOidcLoginCallbackSubjectUnknown:
         :param client: API client
         :param mock_session: Mocked database session
         :param mock_get_jwk: Mocked get_jwk() method @ OAuth2Session object
-        :param mock_fetch_token: Mocked fetch_token() method @ OAuth2Session object
+        :param mock_fetch_token: Mocked fetch_token() method @ OAuth2Session 
+               object
         :param state_encoder: AuthState encoder
         :param jwk_public: Mocked public key from Identity Provider
         :param ip_token: Mocked token from Identity Provider (unencoded)

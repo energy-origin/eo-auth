@@ -1,4 +1,4 @@
-ett-base-helm-chart:
+oe-base-helm-chart:
   deployments:
     - name: auth-api
       replicaCount: 1
@@ -6,10 +6,10 @@ ett-base-helm-chart:
       args: "entrypoint_api.sh"
       probes: true
       env:
-        SQL_URI: postgresql://postgres:1234@ett-postgresql.ett-postgresql.svc.cluster.local:5432/auth
+        SQL_URI: postgresql://postgres:1234@oe-postgresql.oe-postgresql.svc.cluster.local:5432/auth
         SQL_POOL_SIZE: 1
       image:
-        repository: projectorigin/ett-auth
+        repository: projectorigin/auth
         tag: "latest"
         pullPolicy: Always
     - name: auth-consumer
@@ -18,12 +18,12 @@ ett-base-helm-chart:
       args: "entrypoint_consumer.sh"
       probes: true
       env:
-        EVENT_BUS_HOST: my-cluster-kafka-plain-bootstrap.ett-kafka.svc.cluster.local
+        EVENT_BUS_HOST: my-cluster-kafka-plain-bootstrap.oe-kafka.svc.cluster.local
         EVENT_BUS_PORT: 9092
-        SQL_URI: postgresql://postgres:1234@ett-postgresql.ett-postgresql.svc.cluster.local:5432/auth
+        SQL_URI: postgresql://postgres:1234@oe-postgresql.oe-postgresql.svc.cluster.local:5432/auth
         SQL_POOL_SIZE: 1
       image:
-        repository: projectorigin/ett-auth
+        repository: projectorigin/auth
         tag: "latest"
         pullPolicy: Always
 

@@ -19,7 +19,8 @@ class DbUser(db.ModelBase):
     )
 
     subject = sa.Column(sa.String(), index=True, nullable=False)
-    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now())
+    created = sa.Column(sa.DateTime(timezone=True),
+                        nullable=False, server_default=sa.func.now())
 
     # Social security number, encrypted
     ssn = sa.Column(sa.String(), index=True)
@@ -44,8 +45,10 @@ class DbExternalUser(db.ModelBase):
     )
 
     id = sa.Column(sa.Integer(), primary_key=True, index=True)
-    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now())
-    subject = sa.Column(sa.String(), sa.ForeignKey('user.subject'), index=True, nullable=False)
+    created = sa.Column(sa.DateTime(timezone=True),
+                        nullable=False, server_default=sa.func.now())
+    subject = sa.Column(sa.String(), sa.ForeignKey(
+        'user.subject'), index=True, nullable=False)
 
     # ID/name of Identity Provider
     identity_provider = sa.Column(sa.String(), index=True, nullable=False)
@@ -68,7 +71,8 @@ class DbLoginRecord(db.ModelBase):
 
     id = sa.Column(sa.Integer(), index=True)
     subject = sa.Column(sa.String(), index=True, nullable=False)
-    created = sa.Column(sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now())
+    created = sa.Column(sa.DateTime(timezone=True),
+                        nullable=False, server_default=sa.func.now())
 
 
 class DbToken(db.ModelBase):

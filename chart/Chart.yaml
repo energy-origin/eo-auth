@@ -1,11 +1,11 @@
 apiVersion: v2
-name: ett-auth
+name: eo-auth
 description: A Helm chart for Kubernetes
 
 type: application
 version: v0.1.1
 
 dependencies:
-  - name: ett-base-helm-chart
-    version: "v0.1.6"
-    repository: "https://energy-track-and-trace.github.io/helm-charts/"
+  - name: eo-base-helm-chart
+    version: "v0.2.0"
+    repository: "https://energinet-datahub.github.io/helm-charts/"

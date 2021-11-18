@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
-from energytt_platform.tokens import TokenEncoder
-from energytt_platform.auth import TOKEN_HEADER_NAME
-from energytt_platform.models.auth import InternalToken
-from energytt_platform.api import (
+from origin.tokens import TokenEncoder
+from origin.auth import TOKEN_HEADER_NAME
+from origin.models.auth import InternalToken
+from origin.api import (
     Endpoint,
     Context,
     HttpResponse,

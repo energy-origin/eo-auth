@@ -1,4 +1,4 @@
-from energytt_platform.api import Application, TokenGuard
+from origin.api import Application, TokenGuard
 
 from .config import (
     INTERNAL_TOKEN_SECRET,

@@ -7,7 +7,7 @@ from authlib.jose import jwt
 from authlib.integrations.requests_client import \
     OAuth2Session as OAuth2Session_
 
-from energytt_platform.serialize import simple_serializer
+from origin.serialize import simple_serializer
 
 from .config import (
     DEBUG,
@@ -140,6 +140,7 @@ class OAuth2Session(OAuth2Session_):
     """
     TODO
     """
+
     def get_jwk(self) -> str:
         """
         TODO Cache result in a period
