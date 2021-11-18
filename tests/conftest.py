@@ -2,11 +2,10 @@
 conftest.py according to pytest docs:
 https://docs.pytest.org/en/2.7.3/plugins.html?highlight=re#conftest-py-plugins
 """
+import os
 import sys
 
-from os.path import dirname
-from os.path import abspath, join
-
 # Adds the src folder to the local path
-root_dir = join(dirname(abspath(__file__)), '..', 'src')
+test_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.join(test_dir, '..', 'src')
 sys.path.append(root_dir)
