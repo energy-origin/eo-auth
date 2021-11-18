@@ -9,12 +9,15 @@ from unittest.mock import patch
 from authlib.jose import jwt, jwk
 from flask.testing import FlaskClient
 from datetime import datetime, timezone, timedelta
+from testcontainers.postgres import PostgresContainer
 
 from origin.tokens import TokenEncoder
+from origin.sql import SqlEngine, POSTGRES_VERSION
 
 from auth_api.app import create_app
 from auth_api.endpoints import AuthState
 from auth_api.config import INTERNAL_TOKEN_SECRET
+from auth_api.db import db as _db
 
 from .keys import PRIVATE_KEY, PUBLIC_KEY
 
@@ -239,3 +242,37 @@ def userinfo_token_encoded(
     )
 
     return token.decode()
+
+
+# # -- SQL --------------------------------------------------------------------
+
+
+@pytest.fixture(scope='function')
+def psql_uri():
+    """
+    TODO
+    """
+    image = f'postgres:{POSTGRES_VERSION}'
+
+    with PostgresContainer(image) as psql:
+        yield psql.get_connection_url()
+
+
+@pytest.fixture(scope='function')
+def db(psql_uri: str) -> SqlEngine:
+    """
+    TODO
+    """
+    with patch('auth_api.db.db.uri', new=psql_uri):
+        yield _db
+
+
+@pytest.fixture(scope='function')
+def mock_session(db: SqlEngine) -> SqlEngine.Session:
+    """
+    TODO
+    """
+    db.apply_schema()
+
+    with db.make_session() as session:
+        yield session

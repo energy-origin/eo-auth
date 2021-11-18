@@ -46,7 +46,8 @@ class TestOidcLoginCallbackSubjectUnknown:
         :param client: API client
         :param mock_session: Mocked database session
         :param mock_get_jwk: Mocked get_jwk() method @ OAuth2Session object
-        :param mock_fetch_token: Mocked fetch_token() method @ OAuth2Session object
+        :param mock_fetch_token: Mocked fetch_token() method @ OAuth2Session 
+               object
         :param state_encoder: AuthState encoder
         :param jwk_public: Mocked public key from Identity Provider
         :param ip_token: Mocked token from Identity Provider (unencoded)
