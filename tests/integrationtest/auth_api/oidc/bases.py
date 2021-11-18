@@ -3,7 +3,7 @@ from uuid import uuid4
 from typing import Dict, Any
 from unittest.mock import MagicMock
 
-from origin_platform.tokens import TokenEncoder
+from origin.tokens import TokenEncoder
 
 from auth_api.db import db
 from auth_api.endpoints import AuthState

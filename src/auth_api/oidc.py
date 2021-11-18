@@ -7,7 +7,7 @@ from authlib.jose import jwt
 from authlib.integrations.requests_client import \
     OAuth2Session as OAuth2Session_
 
-from origin_platform.serialize import simple_serializer
+from origin.serialize import simple_serializer
 
 from .config import (
     DEBUG,

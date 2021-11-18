@@ -10,7 +10,7 @@ from authlib.jose import jwt, jwk
 from flask.testing import FlaskClient
 from datetime import datetime, timezone, timedelta
 
-from origin_platform.tokens import TokenEncoder
+from origin.tokens import TokenEncoder
 
 from auth_api.app import create_app
 from auth_api.endpoints import AuthState

@@ -2,11 +2,11 @@ from typing import Optional, Any, Union
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
-from origin_platform.serialize import Serializable
-from origin_platform.tokens import TokenEncoder
-from origin_platform.auth import TOKEN_COOKIE_NAME
-from origin_platform.tools import append_query_parameters
-from origin_platform.api import (
+from origin.serialize import Serializable
+from origin.tokens import TokenEncoder
+from origin.auth import TOKEN_COOKIE_NAME
+from origin.tools import append_query_parameters
+from origin.api import (
     Endpoint,
     Context,
     HttpResponse,

@@ -2,9 +2,9 @@ from uuid import uuid4
 from typing import Optional, List
 from datetime import datetime, timezone
 
-from origin_platform.tokens import TokenEncoder
-from origin_platform.encrypt import aes256_encrypt
-from origin_platform.models.auth import InternalToken
+from origin.tokens import TokenEncoder
+from origin.encrypt import aes256_encrypt
+from origin.models.auth import InternalToken
 
 from .db import db
 from .queries import UserQuery, ExternalUserQuery, TokenQuery

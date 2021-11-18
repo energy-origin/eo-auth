@@ -1,9 +1,11 @@
+import pytest
+
 from typing import Dict, Any
 from unittest.mock import MagicMock
 from flask.testing import FlaskClient
 
-from origin_platform.tokens import TokenEncoder
-from origin_platform.api.testing import (
+from origin.tokens import TokenEncoder
+from origin.api.testing import (
     assert_base_url,
     assert_query_parameter,
 )
@@ -24,6 +26,7 @@ class TestOidcLoginCallbackSubjectUnknown:
     Provider's subject is unknown to the system.
     """
 
+    @pytest.mark.integrationtest
     def test__user_does_not_exist__should_redirect_to_verify_ssn(
             self,
             client: FlaskClient,

@@ -13,10 +13,13 @@ pyjwt = "*"
 authlib = "*"
 requests = "*"
 python-decouple = "*"
-peterplys = "0.4.6"
+origin-platform-utils = "0.5.0"
 
 [scripts]
-update-platform = "pip install --upgrade ./../po-platform-utils"
+update-platform = "pip install --upgrade ./../eo-platform-utils"
+testall= "pytest tests"
+unittest= "pytest tests -m unittest --tb=native"
+integrationtest= "pytest tests -m integrationtest --tb=native"
 
 [requires]
 python_version = "3.8"

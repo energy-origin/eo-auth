@@ -12,9 +12,9 @@ from unittest.mock import MagicMock
 from flask.testing import FlaskClient
 from datetime import datetime, timezone
 
-from origin_platform.tokens import TokenEncoder
-from origin_platform.auth import TOKEN_COOKIE_NAME, TOKEN_HEADER_NAME
-from origin_platform.api.testing import (
+from origin.tokens import TokenEncoder
+from origin.auth import TOKEN_COOKIE_NAME, TOKEN_HEADER_NAME
+from origin.api.testing import (
     CookieTester,
     assert_base_url,
     assert_query_parameter,
@@ -92,6 +92,7 @@ class TestOidcCallbackEndpoints(object):
     no setup or teardown.
     """
 
+    @pytest.mark.unittest
     @pytest.mark.parametrize('state', [None, '', 'invalid-state'])
     def test__provide_invalid_state__should_return_status_400(
             self,
@@ -119,6 +120,7 @@ class TestOidcCallbackEndpoints(object):
 
         assert r.status_code == 400
 
+    @pytest.mark.unittest
     @pytest.mark.parametrize('ip_error_description, error_code_expected', (
         # TODO Add all possible errors here:
         ('internal_error', 'E0'),
@@ -176,6 +178,7 @@ class TestOidcCallbackEndpoints(object):
             value='0',
         )
 
+    @pytest.mark.unittest
     def test__fetch_token_fails__should_redirect_to_return_url_with_error_code(  # noqa: E501
             self,
             client: FlaskClient,
@@ -234,6 +237,7 @@ class TestOidcCallbackEndpointsSubjectKnown(OidcCallbackEndpointsSubjectKnownBas
     the user before each test (look at the base-class for details).
     """
 
+    @pytest.mark.integrationtest
     def test__should_307_redirect_to_correct_return_url(
             self,
             client: FlaskClient,
@@ -285,6 +289,7 @@ class TestOidcCallbackEndpointsSubjectKnown(OidcCallbackEndpointsSubjectKnownBas
             value='1',
         )
 
+    @pytest.mark.integrationtest
     def test__should_create_token_in_database_and_set_cookie_correctly(
             self,
             client: FlaskClient,
@@ -347,6 +352,7 @@ class TestOidcCallbackEndpointsSubjectKnown(OidcCallbackEndpointsSubjectKnownBas
             expected_token=token_expected,
         )
 
+    @pytest.mark.integrationtest
     def test__should_register_user_login(
             self,
             client: FlaskClient,

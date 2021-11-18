@@ -1,10 +1,12 @@
 """
 Tests specifically for OIDC login endpoint.
 """
+import pytest 
+
 from flask.testing import FlaskClient
 from urllib.parse import parse_qs, urlsplit
 
-from origin_platform.tokens import TokenEncoder
+from origin.tokens import TokenEncoder
 
 from auth_api.endpoints import AuthState
 
@@ -39,6 +41,7 @@ class TestOidcLogin:
     Tests specifically for OIDC login endpoint.
     """
 
+    @pytest.mark.unittest
     def test__should_return_auth_url_as_json_with_correct_state(
             self,
             client: FlaskClient,
@@ -68,6 +71,7 @@ class TestOidcLogin:
         assert r.status_code == 200
         assert actual_state.return_url == 'http://foobar.com/'
 
+    @pytest.mark.unittest
     def test__omit_parameter_return_url__should_return_status_400(
             self,
             client: FlaskClient,
