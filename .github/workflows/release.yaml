@@ -134,7 +134,7 @@ jobs:
           script: |
             import yaml
 
-            file = "yggdrasil/applications/ett/ett-auth-service.yaml"
+            file = "yggdrasil/applications/eo/eo-auth-service.yaml"
             with open(file) as f:
                 doc = yaml.safe_load(f)
                 print(doc)
