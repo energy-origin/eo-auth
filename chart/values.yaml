@@ -12,16 +12,6 @@ eo-base-helm-chart:
         repository: projectorigin/auth
         tag: "latest"
         pullPolicy: Always
-    consumer:
-      replicaCount: 1
-      command: "/bin/bash"
-      args: "entrypoint_consumer.sh"
-      probes: true
-      env: {}
-      image:
-        repository: projectorigin/auth
-        tag: "latest"
-        pullPolicy: Always
 
   service:
     deployment: auth-api
