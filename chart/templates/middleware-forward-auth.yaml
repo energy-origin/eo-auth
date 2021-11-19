@@ -1,11 +1,11 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: oe-auth-service
+  name: eo-auth-service
   labels:
-    {{- include "oe-auth.labels" . | nindent 4 }}
+    {{- include "eo-auth.labels" . | nindent 4 }}
 spec:
   forwardAuth:
-    address: http://{{ include "oe-auth.fullname" . }}.oe.svc.cluster.local/auth
+    address: http://{{ include "eo-auth.fullname" . }}.eo.svc.cluster.local/auth
     authResponseHeaders:
       - Authorization
