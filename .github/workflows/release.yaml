@@ -159,7 +159,6 @@ jobs:
                 print(doc)
 
                 doc['eo-base-helm-chart']['deployments']['api']['image']['tag'] = "${{ needs.create_release.outputs.release_tag }}"
-                doc['eo-base-helm-chart']['deployments']['consumer']['image']['tag'] = "${{ needs.create_release.outputs.release_tag }}"
 
                 with open(file, 'w') as f:
                     yaml.safe_dump(doc, f)
