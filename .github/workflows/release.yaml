@@ -139,8 +139,8 @@ jobs:
                 doc = yaml.safe_load(f)
                 print(doc)
 
-                doc['oe-base-helm-chart']['deployments'][0]['image']['tag'] = "${{ needs.create_release.outputs.release_tag }}"
-                doc['oe-base-helm-chart']['deployments'][1]['image']['tag'] = "${{ needs.create_release.outputs.release_tag }}"
+                doc['eo-base-helm-chart']['deployments'][0]['image']['tag'] = "${{ needs.create_release.outputs.release_tag }}"
+                doc['eo-base-helm-chart']['deployments'][1]['image']['tag'] = "${{ needs.create_release.outputs.release_tag }}"
 
                 with open(file, 'w') as f:
                     yaml.safe_dump(doc, f)
