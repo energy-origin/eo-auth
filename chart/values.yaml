@@ -2,7 +2,7 @@ eo-base-helm-chart:
   env: {}
 
   deployments:
-    - name: auth-api
+    api: 
       replicaCount: 1
       command: "/bin/bash"
       args: "entrypoint_api.sh"
@@ -12,7 +12,7 @@ eo-base-helm-chart:
         repository: projectorigin/auth
         tag: "latest"
         pullPolicy: Always
-    - name: auth-consumer
+    consumer:
       replicaCount: 1
       command: "/bin/bash"
       args: "entrypoint_consumer.sh"
