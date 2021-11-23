@@ -34,7 +34,7 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "eo-auth.fullname" . }}-http
+  name: {{ include "eo-auth.fullname" . }}-public-http
   labels:
     {{- include "eo-auth.labels" . | nindent 4 }}
 spec:
@@ -60,7 +60,7 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "eo-auth.fullname" . }}-https
+  name: {{ include "eo-auth.fullname" . }}-public-https
   labels:
     {{- include "eo-auth.labels" . | nindent 4 }}
 spec:
