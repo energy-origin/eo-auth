@@ -1,9 +1,9 @@
 {{- if .Values.publicIngress }}
 
-{{- $hosts := default .Values.eo-base-helm-chart.ingress.hosts .Values.publicIngress.hosts }}
-{{- $middlewares := default .Values.eo-base-helm-chart.ingress.middlewares .Values.publicIngress.middlewares }}
-{{- $httpMiddelwares := default .Values.eo-base-helm-chart.ingress.httpMiddelwares .Values.publicIngress.httpMiddelwares }}
-{{- $tlsSecretName := default .Values.eo-base-helm-chart.ingress.tlsSecretName .Values.publicIngress.tlsSecretName }}
+{{- $hosts := default (index .Values "eo-base-helm-chart" "ingress" "hosts") .Values.publicIngress.hosts }}
+{{- $middlewares := default (index .Values "eo-base-helm-chart" "ingress" "middlewares") .Values.publicIngress.middlewares }}
+{{- $httpMiddelwares := default (index .Values "eo-base-helm-chart" "ingress" "httpMiddelwares") .Values.publicIngress.httpMiddelwares }}
+{{- $tlsSecretName := default (index .Values "eo-base-helm-chart" "ingress" "tlsSecretName") .Values.publicIngress.tlsSecretName }}
 
 {{- $matchRules := list }}
 
@@ -45,7 +45,7 @@ spec:
     kind: Rule
     services:
     - name: {{ include "eo-auth.fullname" . }}
-      port: {{ .Values.eo-base-helm-chart.service.port }}
+      port: {{ index .Values "eo-base-helm-chart" "service" "port" }}
     {{- if (or $middlewares $httpMiddelwares) }}
     middlewares:
       {{- range $httpMiddelwares }}
@@ -71,7 +71,7 @@ spec:
     kind: Rule
     services:
     - name: {{ include "eo-auth.fullname" . }}
-      port: {{ .Values.eo-base-helm-chart.service.port }}
+      port: {{ index .Values "eo-base-helm-chart" "service" "port" }}
     {{- if $middlewares }}
     middlewares:
       {{- range $middlewares }}
