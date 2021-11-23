@@ -2,7 +2,7 @@ publicIngress:
   paths:
     - /api/auth/login
   middlewares:
-    - auth-stripprefix
+    - name: auth-stripprefix
 
 fullnameOverride: "eo-auth"
 
