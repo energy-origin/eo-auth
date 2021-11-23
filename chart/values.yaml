@@ -1,4 +1,8 @@
+fullnameOverride: "eo-auth"
+
 eo-base-helm-chart:
+  fullnameOverride: "eo-auth"
+
   env: {}
 
   deployments:
