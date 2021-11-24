@@ -24,7 +24,7 @@ eo-base-helm-chart:
         pullPolicy: Always
 
   service:
-    deployment: auth-api
+    deployment: api
     type: ClusterIP
     port: 80
 #    proxy:
