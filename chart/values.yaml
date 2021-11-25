@@ -46,3 +46,9 @@ eo-base-helm-chart:
       name: auth-stripprefix
       prefixes:
         - /api/auth
+
+global:
+  postgresql:
+    postgresqlUsername: postgres
+    postgresqlPassword: 1234
+    postgresqlDatabase: auth
