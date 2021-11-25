@@ -55,7 +55,7 @@ PSQL_USER = config('PSQL_USER')
 PSQL_PASSWORD = config('PSQL_PASSWORD')
 
 # PostgreSQL password
-PSQL_DB = config('PSQL_PASSWORD')
+PSQL_DB = config('PSQL_DB')
 
 # SqlAlchemy connection string
 SQL_URI = f'postgresql://{PSQL_USER}:{PSQL_PASSWORD}@{PSQL_HOST}:{PSQL_PORT}/{PSQL_DB}'  # noqa: E501
