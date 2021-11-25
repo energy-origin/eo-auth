@@ -42,8 +42,23 @@ SSN_ENCRYPTION_KEY = config('SSN_ENCRYPTION_KEY')
 
 # -- SQL ---------------------------------------------------------------------
 
+# PostgreSQL host
+PSQL_HOST = config('PSQL_HOST')
+
+# PostgreSQL port
+PSQL_PORT = config('PSQL_PORT')
+
+# PostgreSQL username
+PSQL_USER = config('PSQL_USER')
+
+# PostgreSQL password
+PSQL_PASSWORD = config('PSQL_PASSWORD')
+
+# PostgreSQL password
+PSQL_DB = config('PSQL_PASSWORD')
+
 # SqlAlchemy connection string
-SQL_URI = config('SQL_URI')
+SQL_URI = f'postgresql://{PSQL_USER}:{PSQL_PASSWORD}@{PSQL_HOST}:{PSQL_PORT}/{PSQL_DB}'  # noqa: E501
 
 # Number of concurrent connection to SQL database
 SQL_POOL_SIZE = config('SQL_POOL_SIZE', default=1, cast=int)
