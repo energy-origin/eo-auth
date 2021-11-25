@@ -98,7 +98,11 @@ Name | Description | Example
 `INTERNAL_TOKEN_SECRET` | Secret to sign and verify internal tokens | `something-secret`
 `SSN_ENCRYPTION_KEY` | Key en encrypt social security numbers | `also-something-secret`
 **SQL:** | |
-`SQL_URI` | Database connection string [compatible with SQLAlchemy](https://docs.sqlalchemy.org/en/14/core/engines.html) | `postgresql://scott:tiger@localhost/mydatabase`
+`PSQL_HOST` | PostgreSQL server hostname | `127.0.0.1`
+`PSQL_PORT` | PostgreSQL server port | `5432`
+`PSQL_USER` | PostgreSQL username | `postgres`
+`PSQL_PASSWORD` | PostgreSQL password | `1234`
+`PSQL_DB` | PostgreSQL database name | `auth`
 `SQL_POOL_SIZE` | Connection pool size per container | `10`
 **OpenID Connect:** | |
 `OIDC_CLIENT_ID` | OpenID Connect client ID | 
