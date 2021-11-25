@@ -9,13 +9,20 @@ fullnameOverride: "eo-auth"
 eo-base-helm-chart:
   fullnameOverride: "eo-auth"
 
-  env: {}
+  env:
+    PSQL_HOST: eo-auth-postgresql
+    PSQL_PORT: 5432
+    PSQL_USER: postgres
+    PSQL_DB: auth
+    SQL_POOL_SIZE: 1
   podSpec: {}
 
   randomSecret:
     eo-random-secret:
       - eo-token-secret
-      - eo-ssn-secret 
+      - eo-ssn-secret
+    postgres-password:
+      - postgresql-password
 
   envSecrets:
    INTERNAL_TOKEN_SECRET:
@@ -25,6 +32,10 @@ eo-base-helm-chart:
    SSN_ENCRYPTION_KEY:
      secretName: eo-random-secret
      key: eo-ssn-secret
+
+   PSQL_PASSWORD:
+     secretName: postgres-password
+     key: postgresql-password
 
   deployments:
     api: 
@@ -61,3 +72,9 @@ eo-base-helm-chart:
       name: auth-stripprefix
       prefixes:
         - /api/auth
+
+global:
+  postgresql:
+    postgresqlUsername: postgres
+    postgresqlDatabase: auth
+    existingSecret: postgres-password
