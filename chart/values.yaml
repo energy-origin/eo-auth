@@ -21,6 +21,8 @@ eo-base-helm-chart:
     eo-random-secret:
       - eo-token-secret
       - eo-ssn-secret
+    postgres-password:
+      - postgresql-password
 
   envSecrets:
    INTERNAL_TOKEN_SECRET:
@@ -75,3 +77,4 @@ global:
   postgresql:
     postgresqlUsername: postgres
     postgresqlDatabase: auth
+    existingSecret: postgres-password
