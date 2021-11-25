@@ -10,7 +10,7 @@ eo-base-helm-chart:
   fullnameOverride: "eo-auth"
 
   env:
-    PSQL_HOST: eo-postgresql.eo-postgresql.svc.cluster.local
+    PSQL_HOST: eo-auth-postgresql
     PSQL_PORT: 5432
     PSQL_USER: postgres
     PSQL_DB: auth
