@@ -77,7 +77,7 @@ jobs:
         with:
           DOCKER_USERNAME: ${{ secrets.PO_DOCKERHUB_USERNAME }} 
           DOCKER_PASSWORD: ${{ secrets.PO_DOCKERHUB_SECRET }}
-          DOCKER_IMAGE: godske/eo-auth
+          DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
           MAJOR: 0
           MINOR: 0
           PATCH: ${{ github.run_number }}
