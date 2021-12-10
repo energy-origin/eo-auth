@@ -66,7 +66,7 @@ jobs:
 
   unittest:
     name: Unittest
-    # needs: lint
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -93,7 +93,7 @@ jobs:
 
   integrationtest:
     name: Integrationtest
-    needs: unittest
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
