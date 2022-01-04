@@ -10,6 +10,7 @@ testcontainers = "*"
 flake8 = "*"
 
 [packages]
+python-logging-loki = "*"
 pyjwt = "*"
 authlib = "*"
 requests = "*"
