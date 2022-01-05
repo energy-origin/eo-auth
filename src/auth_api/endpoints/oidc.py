@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import Optional, Any, Union
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
@@ -17,8 +18,10 @@ from origin.api import (
 
 from auth_api.db import db
 from auth_api.models import DbUser
+from auth_api.logger import handler
 from auth_api.controller import db_controller
 from auth_api.config import (
+    LOG_LEVEL,
     INTERNAL_TOKEN_SECRET,
     TOKEN_COOKIE_DOMAIN,
     TOKEN_COOKIE_SAMESITE,
@@ -32,6 +35,11 @@ from auth_api.oidc import (
     OpenIDConnectToken,
     OIDC_ERROR_CODES,
 )
+
+
+logger = getLogger(__name__)
+logger.addHandler(handler)
+logger.setLevel(LOG_LEVEL)
 
 
 # -- Models ------------------------------------------------------------------

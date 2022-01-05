@@ -22,7 +22,7 @@ lint-flake8 = "flake8"
 testall= "pytest tests"
 unittest= "pytest tests -m unittest --tb=native"
 integrationtest= "pytest tests -m integrationtest --tb=native"
-update-platform = "pip install --upgrade ./../eo-platform-utils"
+update-platform = "pip install --upgrade ./../ett-platform-utils"
 
 [requires]
 python_version = "3.8"

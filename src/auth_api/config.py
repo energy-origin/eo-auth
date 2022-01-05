@@ -1,9 +1,12 @@
 from decouple import config
 
+from origin.logs import LogLevel
+
 
 # -- General -----------------------------------------------------------------
 
 # Enable/disable debug mode
+
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # Service port (when running development server)
@@ -17,6 +20,23 @@ DEVELOP_URL = f'http://{DEVELOP_HOST}:{DEVELOP_PORT}'
 
 # Service' public URL
 SERVICE_URL = config('SERVICE_URL', default=DEVELOP_URL)
+
+# Service' name
+SERVICE_NAME = config('SERVICE_NAME', default='auth-api')
+
+
+# -- Logging -----------------------------------------------------------------
+
+# Key to encrypt social security numbers
+LOG_LEVEL = config(
+    'LOG_LEVEL', cast=LogLevel, default=LogLevel.WARNING)
+
+# Secret used to sign internal token
+LOG_STRUCTURED = config('LOG_STRUCTURED', default=True, cast=bool)
+
+# Key to encrypt social security numbers
+LOG_TIMESTAMP_FORMAT = config(
+    'LOG_TIMESTAMP_FORMAT', default='%Y-%m-%dT%H:%M:%SZ')
 
 
 # -- Tokens ------------------------------------------------------------------
