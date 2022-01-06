@@ -1,3 +1,6 @@
+import json
+import urllib.parse
+
 from auth_api.config import DEBUG
 
 from ..backend import OpenIDConnectBackend
@@ -40,6 +43,14 @@ class SignaturgruppenBackend(OpenIDConnectBackend):
             number as part of the flow
         :returns: Absolute URL @ Identity Provider
         """
+
+        # amr_values is a space-seperated list of NemID login methods.
+        # nemid.otp enables authentication using nøglekort/app.
+        # nemid.keyfile enables authentication using nøglefil.
+        # The first item in the list is the default displayed option.
+        amr_values = {'nemid': {'amr_values': 'nemid.otp nemid.keyfile'}}
+
+        # OpenID Connect scopes
         scope = ['openid', 'mitid', 'nemid', 'userinfo_token']
 
         if validate_ssn:
@@ -50,6 +61,7 @@ class SignaturgruppenBackend(OpenIDConnectBackend):
             redirect_uri=callback_uri,
             state=state,
             scope=scope,
+            idp_params=json.dumps(amr_values),
         )
 
         return url
