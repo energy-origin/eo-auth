@@ -1,0 +1,70 @@
+name: Orchestrator
+
+on:
+  push:
+    {}
+
+env:
+  PYTHON_VERSION: 3.8
+  
+jobs:
+  install_dependencies:
+    name: Install dependencies
+    steps:
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+  lint:
+    name: Lint
+    needs: install_dependencies
+    steps:
+      - name: Run linting
+        uses: ./.github/actions/lint
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+  unit_test:
+    name: Unit test
+    needs: install_dependencies
+    steps:
+      - name: Run unit tests
+        uses: ./.github/actions/unit-test
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+  integration_test:
+    name: Integration test
+    needs: install_dependencies
+    steps:
+      - name: Run integration tests
+        uses: ./.github/actions/integration-test
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+  build_and_push_container:
+    name: Build and push container
+    needs: [lint, unit_test, integration_test]
+    steps:
+      - name: Build and push container
+        uses: ./.github/actions/build-and-push-container
+
+  update_release_chart:
+    name: Update release chart
+    needs: build_and_push_container
+    steps:
+      - name: Update release chart
+        uses: ./.github/actions/update-release-chart
+
+  create_release:
+    name: Create release
+    needs: update_release_chart
+    steps:
+      - name: Create release
+        uses: ./.github/actions/create-release
+  
+  create_pull_request:
+    name: Create base environment pull request
+    needs: update_release_chart
+    steps:
+      - name: Create pull request
+        uses: ./.github/actions/create-pull-request
