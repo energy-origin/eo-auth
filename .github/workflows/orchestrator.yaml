@@ -9,9 +9,12 @@ env:
   
 jobs:
   checkout:
-  - name: Checkout code
-    uses: actions/checkout@v2
-
+    name: Checkout
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
   install_dependencies:
     name: Install dependencies
     runs-on: ubuntu-latest
