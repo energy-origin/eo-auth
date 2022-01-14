@@ -8,6 +8,10 @@ env:
   PYTHON_VERSION: 3.8
   
 jobs:
+  checkout:
+  - name: Checkout code
+    uses: actions/checkout@v2
+
   install_dependencies:
     name: Install dependencies
     runs-on: ubuntu-latest
