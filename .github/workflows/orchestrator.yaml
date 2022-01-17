@@ -12,6 +12,9 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Run linting
         uses: ./.github/workflows/actions/lint
         with:
@@ -21,6 +24,9 @@ jobs:
     name: Unit test
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Run unit tests
         uses: ./.github/workflows/actions/unit-test
         with:
@@ -30,6 +36,9 @@ jobs:
     name: Integration test
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
       - name: Run integration tests
         uses: ./.github/workflows/actions/integration-test
         with:
