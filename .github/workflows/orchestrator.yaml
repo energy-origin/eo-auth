@@ -50,6 +50,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, unit_test, integration_test]
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
       - name: Build and push container
         uses: ./.github/workflows/actions/build-and-push-container
 
