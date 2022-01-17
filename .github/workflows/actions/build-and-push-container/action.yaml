@@ -23,4 +23,4 @@ runs:
       with:
         context: .
         push: true
-        tags: ${{ steps.image-name.outputs.lowercase }}:sha-${{ github.sha }}
+        tags: ${{ steps.image-name.outputs.lowercase }}:pr-${{ github.event.pull_request.number }}-${{ github.run_number }}

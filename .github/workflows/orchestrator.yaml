@@ -31,7 +31,7 @@ jobs:
       - name: Run unit tests
         uses: ./.github/workflows/actions/unit-test
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   integration_test:
     name: Integration test
@@ -43,7 +43,7 @@ jobs:
       - name: Run integration tests
         uses: ./.github/workflows/actions/integration-test
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   build_and_push_container:
     name: Build and push container
@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        
+
       - name: Build and push container
         uses: ./.github/workflows/actions/build-and-push-container
 
