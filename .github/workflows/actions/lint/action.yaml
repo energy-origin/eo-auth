@@ -1,5 +1,10 @@
 name: Lint
 
+inputs:
+  PYTHON_VERSION:
+    description: 'The version of python to use'
+    required: true
+
 jobs:
   lint:
     name: Lint

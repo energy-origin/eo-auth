@@ -1,5 +1,10 @@
 name: Install dependencies
 
+inputs:
+  PYTHON_VERSION:
+    description: 'The version of python to use'
+    required: true
+
 jobs:
   build:
     name: build

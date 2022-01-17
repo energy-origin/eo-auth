@@ -1,7 +1,9 @@
 name: Integration test
 
-env:
-  python-version: 3.8
+inputs:
+  PYTHON_VERSION:
+    description: 'The version of python to use'
+    required: true
 
 jobs:
   integration_test:

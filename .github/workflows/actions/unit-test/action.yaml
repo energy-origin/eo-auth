@@ -1,5 +1,10 @@
 name: Unit test
 
+inputs:
+  PYTHON_VERSION:
+    description: 'The version of python to use'
+    required: true
+
 jobs:
   unit-test:
     name: Unit test
