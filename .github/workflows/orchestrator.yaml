@@ -8,17 +8,6 @@ env:
   PYTHON_VERSION: 3.8
   
 jobs:
-  install_dependencies:
-    name: Install dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Install dependencies
-        uses: ./.github/workflows/actions/install-dependencies
-        with: 
-          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
-
   lint:
     name: Lint
     runs-on: ubuntu-latest

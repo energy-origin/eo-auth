@@ -5,13 +5,15 @@ inputs:
     description: 'The version of python to use'
     required: true
 
-jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
+runs:
+  using: composite
+  steps:
     - uses: actions/checkout@v2
+    
+    - name: Install dependencies
+      uses: ./.github/workflows/actions/install-dependencies
+      with: 
+        PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
     - name: Set up Python ${{ inputs.PYTHON_VERSION }}
       uses: actions/setup-python@v2
