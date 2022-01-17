@@ -9,6 +9,7 @@ runs:
   using: composite
   steps:
     - name: Get input val
+      shell: bash
       run: echo ${{ inputs.PYTHON_VERSION }}
 
     - name: Set up Python ${{ inputs.PYTHON_VERSION }}
