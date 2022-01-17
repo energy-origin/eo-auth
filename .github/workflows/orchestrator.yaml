@@ -8,13 +8,6 @@ env:
   PYTHON_VERSION: 3.8
   
 jobs:
-  checkout:
-    name: Checkout
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
   install_dependencies:
     name: Install dependencies
     needs: checkout
@@ -23,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
+        uses: ./.github/workflows/actions/install-dependencies
 
   lint:
     name: Lint
@@ -31,7 +24,7 @@ jobs:
     needs: install_dependencies
     steps:
       - name: Run linting
-        uses: ./.github/actions/lint
+        uses: ./.github/workflows/actions/lint
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -41,7 +34,7 @@ jobs:
     needs: install_dependencies
     steps:
       - name: Run unit tests
-        uses: ./.github/actions/unit-test
+        uses: ./.github/workflows/actions/unit-test
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -51,7 +44,7 @@ jobs:
     needs: install_dependencies
     steps:
       - name: Run integration tests
-        uses: ./.github/actions/integration-test
+        uses: ./.github/workflows/actions/integration-test
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -61,7 +54,7 @@ jobs:
     needs: [lint, unit_test, integration_test]
     steps:
       - name: Build and push container
-        uses: ./.github/actions/build-and-push-container
+        uses: ./.github/workflows/actions/build-and-push-container
 
   update_release_chart:
     name: Update release chart
@@ -69,7 +62,7 @@ jobs:
     needs: build_and_push_container
     steps:
       - name: Update release chart
-        uses: ./.github/actions/update-release-chart
+        uses: ./.github/workflows/actions/update-release-chart
 
   create_release:
     name: Create release
@@ -77,7 +70,7 @@ jobs:
     needs: update_release_chart
     steps:
       - name: Create release
-        uses: ./.github/actions/create-release
+        uses: ./.github/workflows/actions/create-release
   
   create_pull_request:
     name: Create base environment pull request
@@ -85,4 +78,4 @@ jobs:
     needs: create_release
     steps:
       - name: Create pull request
-        uses: ./.github/actions/create-pull-request
+        uses: ./.github/workflows/actions/create-pull-request
