@@ -1,8 +1,5 @@
 name: Install dependencies
 
-env:
-  python-version: 3.8
-
 jobs:
   build:
     name: build
@@ -11,10 +8,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Python ${{ env.python-version }}
+      - name: Set up Python ${{ inputs.PYTHON_VERSION }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.python-version }}
+          python-version: ${{ inputs.PYTHON_VERSION }}
 
       - name: Install pipenv
         run: |

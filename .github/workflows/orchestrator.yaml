@@ -16,6 +16,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Install dependencies
         uses: ./.github/workflows/actions/install-dependencies
+        with: 
+          python-version: ${{ env.PYTHON_VERSION }}
 
   lint:
     name: Lint

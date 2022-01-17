@@ -1,8 +1,5 @@
 name: Lint
 
-env:
-  python-version: 3.8
-
 jobs:
   lint:
     name: Lint
