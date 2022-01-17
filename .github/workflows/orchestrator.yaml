@@ -8,8 +8,6 @@ env:
   PYTHON_VERSION: 3.8
   
 jobs:
-  
-
   install_dependencies:
     name: Install dependencies
     runs-on: ubuntu-latest
@@ -19,7 +17,7 @@ jobs:
       - name: Install dependencies
         uses: ./.github/workflows/actions/install-dependencies
         with: 
-          python-version: ${{ env.PYTHON_VERSION }}
+          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   lint:
     name: Lint
@@ -29,7 +27,7 @@ jobs:
       - name: Run linting
         uses: ./.github/workflows/actions/lint
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
   unit_test:
     name: Unit test

@@ -11,11 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Get event val
-        run: echo ${{ github.event.inputs.PYTHON_VERSION }}
-
       - name: Get input val
         run: echo ${{ inputs.PYTHON_VERSION }}
 
