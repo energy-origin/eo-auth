@@ -13,6 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Get event val
+        run: echo ${{ github.event.inputs.PYTHON_VERSION }}
+
+      - name: Get input val
+        run: echo ${{ inputs.PYTHON_VERSION }}
+
       - name: Set up Python ${{ inputs.PYTHON_VERSION }}
         uses: actions/setup-python@v2
         with:
