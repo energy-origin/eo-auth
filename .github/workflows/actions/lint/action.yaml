@@ -33,4 +33,4 @@ runs:
 
     - name: Analysing the code with flake8
       shell: bash
-      run: pipenv run lint-flake8
+      run: pipenv run lint-flake8 --exclude */src/migrations/versions
