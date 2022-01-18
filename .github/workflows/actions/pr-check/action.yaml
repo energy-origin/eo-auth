@@ -1,0 +1,8 @@
+name: PR check
+
+runs:
+  using: composite
+  steps:
+  - name: Todo
+      shell: bash
+      run: fail
