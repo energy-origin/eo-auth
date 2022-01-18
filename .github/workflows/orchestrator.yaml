@@ -48,18 +48,24 @@ jobs:
   pr_check:
     name: PR check
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Run PR check
-        if: github.event_name == 'pull_request'
         uses: ./.github/workflows/actions/pr-check
 
   build_and_push_container:
     name: Build and push container
     runs-on: ubuntu-latest
-    follows: [lint, unit_test, integration_test, pr_check]
+    needs: [lint, unit_test, integration_test, pr_check]
+    if: |
+      always() &&
+      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
+      (needs.unit_test.result == 'success' || needs.unit_test.result == 'skipped') &&
+      (needs.integration_test.result == 'success' || needs.integration_test.result == 'skipped') &&
+      (needs.pr_check.result == 'success' || needs.pr_check.result == 'skipped')
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
