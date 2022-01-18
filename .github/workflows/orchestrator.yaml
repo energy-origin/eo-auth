@@ -48,7 +48,6 @@ jobs:
   pr_check:
     name: PR check
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -59,7 +58,7 @@ jobs:
   build_and_push_container:
     name: Build and push container
     runs-on: ubuntu-latest
-    needs: [lint, unit_test, integration_test, pr_check]
+    needs: [lint, unit_test, integration_test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
