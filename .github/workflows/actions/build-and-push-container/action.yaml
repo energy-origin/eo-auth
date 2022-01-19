@@ -1,5 +1,13 @@
 name: Build and push container
 
+outputs:
+  container_image:
+    description: The container image name
+    value: ${{ steps.image_name.outputs.lowercase }}
+  container_tag:
+    description: The container tag
+    value: ${{ steps.tag.outputs.tag_name }}
+
 runs:
   using: composite
   steps:
@@ -13,7 +21,7 @@ runs:
         password: ${{ github.token }}
 
     - name: Container image name
-      id: image-name
+      id: image_name
       uses: ASzc/change-string-case-action@v2
       with:
         string: ghcr.io/${{ github.repository }}-api
@@ -38,4 +46,4 @@ runs:
       with:
         context: .
         push: true
-        tags: ${{ steps.image-name.outputs.lowercase }}:${{ steps.tag.outputs.tag_name }}
+        tags: ${{ steps.image_name.outputs.lowercase }}:${{ steps.tag.outputs.tag_name }}

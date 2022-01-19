@@ -1,0 +1,28 @@
+name: Update environment chart
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v2
+
+    - name: Get chart name
+      id: get-chart-name
+      uses: ./.github/workflows/actions/yaml-get
+      with:
+        yaml_file: chart/Chart.yaml
+        yaml_path: name
+
+    - name: Update helm chart in base env
+      uses: benc-uk/workflow-dispatch@v1.1
+      with:
+        workflow: Update helm chart version
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        inputs: |
+          '{ 
+            "name": "${{ steps.get-chart-name.outputs.result }}", 
+            "repoURL": "${{ github.repositoryUrl }}", 
+            "targetRevision": "${{ github.event.pull_request.head.ref }}",
+            "path": "chart"
+          }'
+        ref: refs/heads/main
+        repo: ${{ github.event.repository.owner.name }}/eo-base-environment
