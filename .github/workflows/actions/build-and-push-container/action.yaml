@@ -18,14 +18,23 @@ runs:
       with:
         string: ghcr.io/${{ github.repository }}-api
 
-    - name: Tag main
-      id: tag-main
-      if: github.event_name == 'pull_request'
-
+    - name: Get tag
+      id: tag
+      shell: bash
+      run: |
+        if ${{github.event_name == 'push' && github.ref_name == 'main'}}
+        then    
+          echo "::set-output name=tag_name::$(grep 'version: ' chart/Chart.yaml | cut -f 2 -d ' ')"
+        elif ${{github.event_name == 'pull_request'}}
+        then
+          echo "::set-output name=tag_name::pr-${{ github.event.pull_request.number }}-${{ github.run_number }}"
+        else
+          echo "::set-output name=tag_name::build-$(git rev-parse --short HEAD)"
+        fi
 
     - name: Build and push Docker image
       uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
       with:
         context: .
         push: true
-        tags: ${{ steps.image-name.outputs.lowercase }}:pr-${{ github.event.pull_request.number }}-${{ github.run_number }}
+        tags: ${{ steps.image-name.outputs.lowercase }}:${{ steps.tag.outputs.tag_name }}
