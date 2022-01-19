@@ -1,8 +1,13 @@
 name: Orchestrator
 
 on:
-  push: {}
   pull_request: {}
+  push:
+    - main
+
+concurrency: 
+  group: ${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   PYTHON_VERSION: 3.8

@@ -29,7 +29,8 @@ runs:
         then
           echo "::set-output name=tag_name::pr-${{ github.event.pull_request.number }}-${{ github.run_number }}"
         else
-          echo "::set-output name=tag_name::build-$(git rev-parse --short HEAD)"
+          echo Not supported
+          exit 1
         fi
 
     - name: Build and push Docker image
