@@ -8,13 +8,6 @@ env:
   PYTHON_VERSION: 3.8
   
 jobs:
-  echo_github:
-    name: Echo github
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check github val
-        run: echo ${{toJSON(github)}}
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
