@@ -18,10 +18,6 @@ runs:
       with:
         string: ghcr.io/${{ github.repository }}-api
 
-    - name: Check github val
-        run: | 
-          echo ${{ github }}
-
     - name: Tag main
       id: tag-main
       if: github.event_name == 'pull_request'
