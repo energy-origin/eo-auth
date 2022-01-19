@@ -18,6 +18,15 @@ runs:
       with:
         string: ghcr.io/${{ github.repository }}-api
 
+    - name: Check github val
+        run: | 
+          echo ${{ github }}
+
+    - name: Tag main
+      id: tag-main
+      if: github.event_name == 'pull_request'
+
+
     - name: Build and push Docker image
       uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
       with:
