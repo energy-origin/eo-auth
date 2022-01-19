@@ -3,7 +3,8 @@ name: Orchestrator
 on:
   pull_request: {}
   push:
-    - main
+    branches:
+      - main
 
 concurrency: 
   group: ${{ github.ref }}
