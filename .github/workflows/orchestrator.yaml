@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check github val
-        run: echo ${{ github }}
+        run: echo ${{toJSON(github)}}
 
   lint:
     name: Lint
