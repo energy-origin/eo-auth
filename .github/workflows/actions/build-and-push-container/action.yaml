@@ -29,7 +29,7 @@ runs:
         then
           echo "::set-output name=tag_name::pr-${{ github.event.pull_request.number }}-${{ github.run_number }}"
         else
-          echo Not supported
+          echo Not supported on push to branches other than main
           exit 1
         fi
 
