@@ -1,5 +1,10 @@
 name: Update environment chart
 
+inputs:
+  update_env_token:
+    description: The token used to update base env
+    required: true
+
 runs:
   using: composite
   steps:
@@ -16,7 +21,7 @@ runs:
       uses: benc-uk/workflow-dispatch@v1.1
       with:
         workflow: Update helm chart version
-        token: ${{ secrets.UPDATE_ENV_TOKEN }}
+        token: ${{ inputs.update_env_token }}
         inputs: |
           '{ 
             "name": "${{ steps.get-chart-name.outputs.result }}", 

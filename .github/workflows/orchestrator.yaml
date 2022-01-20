@@ -81,3 +81,5 @@ jobs:
 
       - name: Update environment chart
         uses: ./.github/workflows/actions/update-environment-chart
+        with:
+          update_env_token: ${{ secrets.UPDATE_ENV_TOKEN }}
