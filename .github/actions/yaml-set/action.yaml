@@ -29,7 +29,7 @@ runs:
 
     - name: Print inputs
       shell: bash
-      run: Echo yaml_file-${{inputs.yaml_file}} yaml_path-${{inputs.yaml_path}} value-${{inputs.value}}
+      run: Echo 'yaml_file-${{inputs.yaml_file}} yaml_path-${{inputs.yaml_path}} value-${{inputs.value}}'
 
     - name: Set yaml value
       shell: bash
