@@ -16,7 +16,7 @@ runs:
       uses: benc-uk/workflow-dispatch@v1.1
       with:
         workflow: Update helm chart version
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        token: ${{ secrets.UPDATE_ENV_TOKEN }}
         inputs: |
           '{ 
             "name": "${{ steps.get-chart-name.outputs.result }}", 
