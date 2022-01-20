@@ -14,42 +14,61 @@ env:
   PYTHON_VERSION: 3.8
   
 jobs:
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-latest
+  #   continue-on-error: true
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+
+  #     - name: Run linting
+  #       uses: ./.github/actions/lint
+  #       with:
+  #         PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+
+  # unit_test:
+  #   name: Unit test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+
+  #     - name: Run unit tests
+  #       uses: ./.github/actions/unit-test
+  #       with:
+  #         PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+
+  # integration_test:
+  #   name: Integration test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+
+  #     - name: Run integration tests
+  #       uses: ./.github/actions/integration-test
+  #       with:
+  #         PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run linting
-        uses: ./.github/actions/lint
-        with:
-          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+    - run: echo "test"
 
   unit_test:
     name: Unit test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run unit tests
-        uses: ./.github/actions/unit-test
-        with:
-          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+      - run: echo "test"
 
   integration_test:
     name: Integration test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run integration tests
-        uses: ./.github/actions/integration-test
-        with:
-          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+      - run: echo "test"
 
   build_and_push_container:
     name: Build and push container
