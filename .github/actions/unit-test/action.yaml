@@ -1,4 +1,4 @@
-name: Lint
+name: Unit test
 
 inputs:
   PYTHON_VERSION:
@@ -9,9 +9,9 @@ runs:
   using: composite
   steps:
     - uses: actions/checkout@v2
-    
+  
     - name: Install dependencies
-      uses: ./.github/workflows/actions/install-dependencies
+      uses: ./.github/actions/install-dependencies
       with: 
         PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
@@ -31,6 +31,7 @@ runs:
         path: ~/.local/share/virtualenvs
         key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
 
-    - name: Analysing the code with flake8
+    - name: Running unittests
       shell: bash
-      run: pipenv run lint-flake8 --exclude ./src/migrations/versions
+      run: |
+        pipenv run unittest

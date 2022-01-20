@@ -1,4 +1,4 @@
-name: Integration test
+name: Lint
 
 inputs:
   PYTHON_VERSION:
@@ -11,7 +11,7 @@ runs:
     - uses: actions/checkout@v2
     
     - name: Install dependencies
-      uses: ./.github/workflows/actions/install-dependencies
+      uses: ./.github/actions/install-dependencies
       with: 
         PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
@@ -31,7 +31,6 @@ runs:
         path: ~/.local/share/virtualenvs
         key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
 
-    - name: Running integrationtest
+    - name: Analysing the code with flake8
       shell: bash
-      run: |
-        pipenv run integrationtest
+      run: pipenv run lint-flake8 --exclude ./src/migrations/versions

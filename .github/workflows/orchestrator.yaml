@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run linting
-        uses: ./.github/workflows/actions/lint
+        uses: ./.github/actions/lint
         with:
           PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run unit tests
-        uses: ./.github/workflows/actions/unit-test
+        uses: ./.github/actions/unit-test
         with:
           PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
@@ -47,7 +47,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run integration tests
-        uses: ./.github/workflows/actions/integration-test
+        uses: ./.github/actions/integration-test
         with:
           PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
@@ -61,10 +61,10 @@ jobs:
 
       - name: Build and push container
         id: build_and_push
-        uses: ./.github/workflows/actions/build-and-push-container
+        uses: ./.github/actions/build-and-push-container
 
       - name: Update deployment
-        uses: ./.github/workflows/actions/update-version-tag
+        uses: ./.github/actions/update-version-tag
         with: 
           image: ${{steps.build_and_push.outputs.container_image}}
           tag: ${{steps.build_and_push.outputs.container_tag}}
@@ -80,6 +80,6 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Update environment chart
-        uses: ./.github/workflows/actions/update-environment-chart
+        uses: ./.github/actions/update-environment-chart
         with:
           update_env_token: ${{ secrets.UPDATE_ENV_TOKEN }}

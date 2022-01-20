@@ -1,4 +1,4 @@
-name: Unit test
+name: Integration test
 
 inputs:
   PYTHON_VERSION:
@@ -9,9 +9,9 @@ runs:
   using: composite
   steps:
     - uses: actions/checkout@v2
-  
+    
     - name: Install dependencies
-      uses: ./.github/workflows/actions/install-dependencies
+      uses: ./.github/actions/install-dependencies
       with: 
         PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
 
@@ -31,7 +31,7 @@ runs:
         path: ~/.local/share/virtualenvs
         key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
 
-    - name: Running unittests
+    - name: Running integrationtest
       shell: bash
       run: |
-        pipenv run unittest
+        pipenv run integrationtest

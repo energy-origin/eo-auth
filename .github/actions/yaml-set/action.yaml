@@ -9,7 +9,11 @@ inputs:
     required: true
   value:
     description: The new value to set the target to
-    required: true
+    required: false
+  delete:
+    description: Whether the value should be deleted
+    required: false
+    default: false
 
 runs:
   using: composite
@@ -23,6 +27,12 @@ runs:
       shell: bash
       run: pip install yamlpath
 
-    - name: Run yaml set
+    - name: Set yaml value
       shell: bash
+      if: !inputs.delete
       run: yaml-set --change ${{ inputs.yaml_path }} --value ${{ inputs.value }} ${{ inputs.yaml_file }}
+
+    - name: Delete yaml value
+      shell: bash
+      if: inputs.delete
+      run: yaml-set --change ${{ inputs.yaml_path }} --delete ${{ inputs.yaml_file }}

@@ -12,7 +12,7 @@ runs:
 
     - name: Get chart name
       id: get-chart-name
-      uses: ./.github/workflows/actions/yaml-get
+      uses: ./.github/actions/yaml-get
       with:
         yaml_file: chart/Chart.yaml
         yaml_path: name
@@ -29,5 +29,5 @@ runs:
             "targetRevision": "${{ github.event.pull_request.head.ref }}",
             "path": "chart"
           }'
-        ref: refs/heads/main
+        ref: update_chart
         repo: ${{ github.event.repository.owner.name }}/eo-base-environment
