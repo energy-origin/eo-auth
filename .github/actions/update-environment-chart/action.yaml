@@ -30,4 +30,4 @@ runs:
             "path": "chart" 
           }
         ref: main
-        repo: MartinSchmidt/eo-base-environment
+        repo: Chrisbh/eo-base-environment
