@@ -40,8 +40,6 @@ eo-base-helm-chart:
       probes: true
       env: {}
       image:
-        repository: ghcr.io/energinet-datahub/eo-auth-api
-        tag: pr-64-48
         pullPolicy: Always
 
   service:
