@@ -29,5 +29,4 @@ runs:
             "targetRevision": "${{ github.event.pull_request.head.ref }}", 
             "path": "chart" 
           }
-        ref: update_chart
-        repo: ${{ github.event.repository.owner.name }}/eo-base-environment
+        repo: MartinSchmidt/eo-base-environment
