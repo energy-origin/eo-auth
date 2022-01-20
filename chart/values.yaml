@@ -42,8 +42,6 @@ eo-base-helm-chart:
       image:
         pullPolicy: Always
 
-        
-
   service:
     deployment: api
     type: ClusterIP
