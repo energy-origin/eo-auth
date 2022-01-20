@@ -29,4 +29,5 @@ runs:
             "targetRevision": "${{ github.event.pull_request.head.ref }}", 
             "path": "chart" 
           }
+        ref: main
         repo: MartinSchmidt/eo-base-environment
