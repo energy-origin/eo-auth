@@ -23,6 +23,11 @@ runs:
         workflow: Update helm chart version
         token: ${{ inputs.update_env_token }}
         inputs: |
-          '{ "name": "${{ steps.get-chart-name.outputs.result }}", "repoURL": "${{ github.repositoryUrl }}", "targetRevision": "${{ github.event.pull_request.head.ref }}", "path": "chart" }'
+          { 
+            "name": "${{ steps.get-chart-name.outputs.result }}", 
+            "repoURL": "${{ github.repositoryUrl }}", 
+            "targetRevision": "${{ github.event.pull_request.head.ref }}", 
+            "path": "chart" 
+          }
         ref: update_chart
         repo: ${{ github.event.repository.owner.name }}/eo-base-environment
