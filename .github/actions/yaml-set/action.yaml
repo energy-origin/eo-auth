@@ -34,10 +34,10 @@ runs:
 
     - name: Set yaml value
       shell: bash
-      if: inputs.delete == false
+      # if: inputs.delete == false
       run: yaml-set --change ${{ inputs.yaml_path }} --value ${{ inputs.value }} ${{ inputs.yaml_file }}
 
-    - name: Delete yaml value
-      shell: bash
-      if: inputs.delete == true
-      run: yaml-set --change ${{ inputs.yaml_path }} --delete ${{ inputs.yaml_file }}
+    # - name: Delete yaml value
+    #   shell: bash
+    #   if: inputs.delete == true
+    #   run: yaml-set --change ${{ inputs.yaml_path }} --delete ${{ inputs.yaml_file }}
