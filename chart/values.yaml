@@ -1,4 +1,4 @@
----
+--- 
 publicIngress:
   paths:
     - /api/auth/oidc/login
